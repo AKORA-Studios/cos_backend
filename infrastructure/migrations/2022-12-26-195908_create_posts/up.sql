@@ -2,7 +2,7 @@
 CREATE TABLE posts (
     id              SERIAL PRIMARY KEY,
     description     VARCHAR(1024) NOT NULL,
-    author_id       INT NOT NULL REFERENCES users(id),
+    user_id         INT NOT NULL REFERENCES users(id),
 
     downloads       INT NOT NULL DEFAULT 0,
     likes           INT NOT NULL DEFAULT 0,
@@ -17,5 +17,5 @@ CREATE TABLE posts (
 CREATE TABLE post_people (
     id              SERIAL PRIMARY KEY,
     post_id         INT NOT NULL REFERENCES posts(id),
-    person_id       INT NOT NULL REFERENCES users(id)
+    user_id         INT NOT NULL REFERENCES users(id)
 );
