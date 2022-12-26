@@ -9,7 +9,7 @@ use std::time::SystemTime;
 
 // Queryable will generate the code needed to load the struct from an SQL statement
 #[derive(Identifiable, Queryable, Serialize, Associations, PartialEq, Eq, Debug)]
-#[belongs_to(Post)]
+#[diesel(belongs_to(Post))]
 #[diesel(table_name = comments)]
 pub struct Comment {
     pub id: i32,

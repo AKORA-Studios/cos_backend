@@ -1,7 +1,7 @@
 // application/src/post/read.rs
 
 use diesel::prelude::*;
-use domain::models::Post;
+use domain::{models::Post, schema::posts::all_columns};
 use infrastructure::establish_connection;
 use rocket::response::status::NotFound;
 use shared::response_models::{Response, ResponseBody};
@@ -31,17 +31,17 @@ pub fn list_post(post_id: i32) -> Result<Post, NotFound<String>> {
     }
 }
 
-pub fn list_posts() -> Vec<Post> {
+pub fn list_posts(user_id: i32, count: usize) -> Vec<Post> {
     use domain::schema::posts;
 
-    match posts::table
-        .select(posts::all_columns)
-        .load::<Post>(&mut establish_connection())
-    {
-        Ok(mut posts) => {
-            posts.sort();
-            posts
-        }
+    let result = posts::table
+        .select(all_columns)
+        .filter(posts::user_id.eq(user_id))
+        .limit(count as i64)
+        .load::<Post>(&mut establish_connection());
+
+    match result {
+        Ok(post_list) => post_list,
         Err(err) => match err {
             _ => {
                 panic!("Database error - {}", err);
