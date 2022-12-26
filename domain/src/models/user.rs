@@ -3,11 +3,11 @@
 use crate::schema::users;
 use diesel::prelude::*;
 use rocket::serde::{Deserialize, Serialize};
-use std::cmp::{Eq, Ord, PartialEq, PartialOrd};
+use std::cmp::{Eq, PartialEq};
 use std::time::SystemTime;
 
 // Queryable will generate the code needed to load the struct from an SQL statement
-#[derive(Identifiable, Queryable, PartialEq, Debug)]
+#[derive(Identifiable, Queryable, PartialEq, Eq, Debug)]
 #[diesel(table_name = users)]
 pub struct User {
     pub id: i32,
