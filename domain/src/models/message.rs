@@ -3,7 +3,7 @@ use diesel::prelude::*;
 
 use super::user::User;
 use crate::schema::messages;
-use rocket::serde::{Deserialize, Serialize};
+use rocket::serde::Deserialize;
 use std::cmp::{Eq, PartialEq};
 use std::time::SystemTime;
 
@@ -19,13 +19,11 @@ pub struct Message {
     pub created_at: SystemTime,
 }
 
-/*
 #[derive(Insertable, Deserialize)]
 #[serde(crate = "rocket::serde")]
-#[diesel(table_name = posts)]
-pub struct NewPost {
-    pub title: String,
-    pub body: String,
-    pub genre: String,
+#[diesel(table_name = messages)]
+pub struct NewMessage {
+    pub content: String,
+    pub from_id: i32,
+    pub to_id: i32,
 }
-*/

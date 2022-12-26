@@ -9,7 +9,7 @@ use std::time::SystemTime;
 
 // https://docs.diesel.rs/diesel/associations/index.html#traits
 // Queryable will generate the code needed to load the struct from an SQL statement
-#[derive(Identifiable, Queryable, Associations, PartialEq, Eq, Debug)]
+#[derive(Identifiable, Queryable, Serialize, Associations, PartialEq, Eq, Debug)]
 #[belongs_to(User)]
 // #[belongs_to(User, foreign_key = "photographer_id")]
 #[diesel(table_name = posts)]
@@ -25,13 +25,12 @@ pub struct Post {
     pub created_at: SystemTime,
 }
 
-/*
 #[derive(Insertable, Deserialize)]
 #[serde(crate = "rocket::serde")]
 #[diesel(table_name = posts)]
 pub struct NewPost {
-    pub title: String,
-    pub body: String,
-    pub genre: String,
+    pub description: String,
+    pub user_id: i32,
+    pub tags: Vec<String>,
+    pub photographer_id: Option<i32>,
 }
-*/

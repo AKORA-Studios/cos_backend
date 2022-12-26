@@ -14,7 +14,8 @@ diesel::table! {
     events (id) {
         id -> Int4,
         name -> Varchar,
-        during -> Tsrange,
+        start_time -> Timestamp,
+        end_time -> Timestamp,
         lat -> Float8,
         lon -> Float8,
     }
