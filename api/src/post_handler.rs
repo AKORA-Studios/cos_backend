@@ -8,7 +8,7 @@ use rocket::{get, post};
 use shared::response_models::{PostResponse, PostsResponse};
 
 #[get("/posts/<post_id>")]
-pub fn list_post_handler(post_id: i32) -> Result<String, NotFound<String>> {
+pub fn view_post_handler(post_id: i32) -> Result<String, NotFound<String>> {
     let post = read::view_post(post_id)?;
     let response = PostResponse { post };
 
@@ -16,7 +16,7 @@ pub fn list_post_handler(post_id: i32) -> Result<String, NotFound<String>> {
 }
 
 #[get("/posts/recent?<limit>")]
-pub fn list_today_handler(limit: Option<usize>) -> Result<String, NotFound<String>> {
+pub fn list_posts_today_handler(limit: Option<usize>) -> Result<String, NotFound<String>> {
     let limit = limit.unwrap_or(25);
     let posts = read::list_today_posts(limit);
 
@@ -26,7 +26,10 @@ pub fn list_today_handler(limit: Option<usize>) -> Result<String, NotFound<Strin
 }
 
 #[get("/users/<user_id>/posts?<limit>")]
-pub fn list_posts_handler(user_id: i32, limit: Option<usize>) -> Result<String, NotFound<String>> {
+pub fn list_user_posts_handler(
+    user_id: i32,
+    limit: Option<usize>,
+) -> Result<String, NotFound<String>> {
     let limit = limit.unwrap_or(25);
     let posts = read::list_user_posts(user_id, limit);
     let response = PostsResponse { posts };

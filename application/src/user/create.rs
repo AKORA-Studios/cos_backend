@@ -1,7 +1,7 @@
-// application/src/post/create.rs
+// application/src/user/create.rs
 
 use diesel::prelude::*;
-use domain::models::{NewUser, User};
+use domain::models::{DisplayUser, NewUser, DISPLAY_USER_COLUMNS};
 use infrastructure::establish_connection;
 use rocket::response::status::Created;
 use rocket::serde::json::Json;
@@ -14,7 +14,8 @@ pub fn create_user(user: Json<NewUser>) -> Created<String> {
 
     match diesel::insert_into(users)
         .values(&user)
-        .get_result::<User>(&mut establish_connection())
+        .returning(DISPLAY_USER_COLUMNS)
+        .get_result::<DisplayUser>(&mut establish_connection())
     {
         Ok(user) => {
             let response = UserResponse { user };

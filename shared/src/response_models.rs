@@ -1,6 +1,6 @@
 // shared/src/response_models.rs
 
-use domain::models::{Post, User};
+use domain::models::{DisplayUser, Event, Post};
 use rocket::serde::Serialize;
 
 #[derive(Serialize)]
@@ -24,5 +24,11 @@ pub struct PostResponse {
 #[derive(Serialize)]
 #[serde(crate = "rocket::serde")]
 pub struct UserResponse {
-    pub user: User,
+    pub user: DisplayUser,
+}
+
+#[derive(Serialize)]
+#[serde(crate = "rocket::serde")]
+pub struct EventRespone {
+    pub event: Event,
 }

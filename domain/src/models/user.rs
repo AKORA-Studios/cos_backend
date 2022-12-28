@@ -57,3 +57,29 @@ pub struct DisplayUser {
     pub snapchat_username: Option<String>,
     pub youtube_username: Option<String>,
 }
+
+type DisplayUserColumns = (
+    users::id,
+    users::username,
+    users::nickname,
+    users::created_at,
+    users::twitter_username,
+    users::instagram_username,
+    users::tiktok_username,
+    users::onlyfans_username,
+    users::snapchat_username,
+    users::youtube_username,
+);
+
+pub const DISPLAY_USER_COLUMNS: DisplayUserColumns = (
+    users::id,
+    users::username,
+    users::nickname,
+    users::created_at,
+    users::twitter_username,
+    users::instagram_username,
+    users::tiktok_username,
+    users::onlyfans_username,
+    users::snapchat_username,
+    users::youtube_username,
+);

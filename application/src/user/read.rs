@@ -1,30 +1,19 @@
-// application/src/post/read.rs
+// application/src/user/read.rs
 
 use diesel::prelude::*;
-use diesel::result::Error as DieselError;
-use domain::models::User;
+use domain::models::{DisplayUser, DISPLAY_USER_COLUMNS};
 use infrastructure::establish_connection;
 use rocket::response::status::NotFound;
-use shared::response_models::MessageResponse;
 
-pub fn view_user(user_id: i32) -> Result<User, NotFound<String>> {
+use crate::util::map_diesel_result;
+
+pub fn view_user(user_id: i32) -> Result<DisplayUser, NotFound<String>> {
     use domain::schema::users::dsl::*;
 
-    match users
+    let result = users
+        .select(DISPLAY_USER_COLUMNS)
         .find(user_id)
-        .first::<User>(&mut establish_connection())
-    {
-        Ok(post) => Ok(post),
-        Err(err) => match err {
-            DieselError::NotFound => {
-                let response = MessageResponse {
-                    message: format!("Error selecting post with id {} - {}", user_id, err),
-                };
-                return Err(NotFound(serde_json::to_string(&response).unwrap()));
-            }
-            _ => {
-                panic!("Database error - {}", err);
-            }
-        },
-    }
+        .first::<DisplayUser>(&mut establish_connection());
+
+    map_diesel_result(result)
 }
