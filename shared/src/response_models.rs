@@ -1,17 +1,28 @@
 // shared/src/response_models.rs
 
-use domain::models::Post;
+use domain::models::{Post, User};
 use rocket::serde::Serialize;
 
 #[derive(Serialize)]
-pub enum ResponseBody {
-    Message(String),
-    Post(Post),
-    Posts(Vec<Post>),
+#[serde(crate = "rocket::serde")]
+pub struct MessageResponse {
+    pub message: String,
 }
 
 #[derive(Serialize)]
 #[serde(crate = "rocket::serde")]
-pub struct Response {
-    pub body: ResponseBody,
+pub struct PostsResponse {
+    pub posts: Vec<Post>,
+}
+
+#[derive(Serialize)]
+#[serde(crate = "rocket::serde")]
+pub struct PostResponse {
+    pub post: Post,
+}
+
+#[derive(Serialize)]
+#[serde(crate = "rocket::serde")]
+pub struct UserResponse {
+    pub user: User,
 }

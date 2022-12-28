@@ -5,31 +5,36 @@ use domain::models::NewPost;
 use rocket::response::status::{Created, NotFound};
 use rocket::serde::json::Json;
 use rocket::{get, post};
-use shared::response_models::{Response, ResponseBody};
+use shared::response_models::{PostResponse, PostsResponse};
 
-#[get("/post/<post_id>")]
+#[get("/posts/<post_id>")]
 pub fn list_post_handler(post_id: i32) -> Result<String, NotFound<String>> {
-    // 👇 New function body!
-    let post = read::list_post(post_id)?;
-    let response = Response {
-        body: ResponseBody::Post(post),
-    };
+    let post = read::view_post(post_id)?;
+    let response = PostResponse { post };
 
     Ok(serde_json::to_string(&response).unwrap())
 }
 
-#[get("/user/<user_id>/posts?<limit>")]
-pub fn list_posts_handler(user_id: i32, limit: usize) -> Result<String, NotFound<String>> {
-    // 👇 New function body!
-    let posts = read::list_posts(user_id, limit);
-    let response = Response {
-        body: ResponseBody::Posts(posts),
-    };
+#[get("/posts/recent?<limit>")]
+pub fn list_today_handler(limit: Option<usize>) -> Result<String, NotFound<String>> {
+    let limit = limit.unwrap_or(25);
+    let posts = read::list_today_posts(limit);
+
+    let response = PostsResponse { posts };
 
     Ok(serde_json::to_string(&response).unwrap())
 }
 
-#[post("/new_post", format = "application/json", data = "<post>")]
+#[get("/users/<user_id>/posts?<limit>")]
+pub fn list_posts_handler(user_id: i32, limit: Option<usize>) -> Result<String, NotFound<String>> {
+    let limit = limit.unwrap_or(25);
+    let posts = read::list_user_posts(user_id, limit);
+    let response = PostsResponse { posts };
+
+    Ok(serde_json::to_string(&response).unwrap())
+}
+
+#[post("/posts/new", format = "application/json", data = "<post>")]
 pub fn create_post_handler(post: Json<NewPost>) -> Created<String> {
     create::create_post(post)
 }
