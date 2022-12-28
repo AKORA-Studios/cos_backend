@@ -1,6 +1,6 @@
 // shared/src/response_models.rs
 
-use domain::models::{DisplayUser, Event, Post};
+use domain::models::{Comment, DisplayUser, Event, Post};
 use rocket::serde::Serialize;
 
 #[derive(Serialize)]
@@ -31,4 +31,16 @@ pub struct UserResponse {
 #[serde(crate = "rocket::serde")]
 pub struct EventRespone {
     pub event: Event,
+}
+
+#[derive(Serialize)]
+#[serde(crate = "rocket::serde")]
+pub struct CommentRespone {
+    pub comment: Comment,
+}
+
+#[derive(Serialize)]
+#[serde(crate = "rocket::serde")]
+pub struct CommentsRespone {
+    pub comments: Vec<Comment>,
 }

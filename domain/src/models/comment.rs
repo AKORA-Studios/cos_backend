@@ -19,6 +19,8 @@ pub struct Comment {
     pub created_at: SystemTime,
 }
 
+// !TODO replies
+
 #[derive(Insertable, Deserialize)]
 #[serde(crate = "rocket::serde")]
 #[diesel(table_name = comments)]

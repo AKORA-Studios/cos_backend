@@ -19,6 +19,24 @@ pub fn view_post(post_id: i32) -> Result<Post, NotFound<String>> {
     map_diesel_result(result)
 }
 
+pub fn list_recent_posts(limit: usize) -> Vec<Post> {
+    use domain::schema::posts::dsl::*;
+
+    let result = posts
+        .order(created_at.desc())
+        .limit(limit as i64)
+        .load::<Post>(&mut establish_connection());
+
+    match result {
+        Ok(post_list) => post_list,
+        Err(err) => match err {
+            _ => {
+                panic!("Database error - {}", err);
+            }
+        },
+    }
+}
+
 pub fn list_today_posts(limit: usize) -> Vec<Post> {
     use domain::schema::posts::dsl::*;
 
