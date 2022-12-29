@@ -3,12 +3,13 @@ use diesel::prelude::*;
 
 use super::user::User;
 use crate::schema::messages;
-use rocket::serde::Deserialize;
+use rocket::serde::{Deserialize, Serialize};
 use std::cmp::{Eq, PartialEq};
 use std::time::SystemTime;
 
 // Queryable will generate the code needed to load the struct from an SQL statement
-#[derive(Identifiable, Queryable, Associations, PartialEq, Eq, Debug)]
+#[derive(Identifiable, Queryable, Serialize, Associations, PartialEq, Eq, Debug)]
+#[serde(crate = "rocket::serde")]
 #[diesel(belongs_to(User, foreign_key = to_id))]
 #[diesel(table_name = messages)]
 pub struct Message {

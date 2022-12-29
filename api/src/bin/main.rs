@@ -3,6 +3,7 @@
 #[macro_use]
 extern crate rocket;
 use api::event_handler;
+use api::message_handler;
 use api::post_handler;
 use api::user_handler;
 
@@ -21,6 +22,8 @@ fn rocket() -> _ {
             user_handler::view_user_handler,
             event_handler::create_event_handler,
             event_handler::view_event_handler,
+            message_handler::create_message_handler,
+            message_handler::view_message_handler,
         ],
     )
 }

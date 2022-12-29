@@ -1,12 +1,18 @@
 // shared/src/response_models.rs
 
-use domain::models::{Comment, DisplayUser, Event, Post};
+use domain::models::{Comment, DisplayUser, Event, Message, Post};
 use rocket::serde::Serialize;
 
 #[derive(Serialize)]
 #[serde(crate = "rocket::serde")]
-pub struct MessageResponse {
+pub struct ErrorMessageResponse {
     pub message: String,
+}
+
+#[derive(Serialize)]
+#[serde(crate = "rocket::serde")]
+pub struct MessageResponse {
+    pub message: Message,
 }
 
 #[derive(Serialize)]
