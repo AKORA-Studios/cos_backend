@@ -3,7 +3,10 @@
 use std::time::{Duration, SystemTime};
 
 use diesel::prelude::*;
-use domain::{models::Post, schema::posts::all_columns};
+use domain::{
+    models::{JoinedPostWithUser, Post, PostWithUser, POST_WITH_USER_COLUMNS},
+    schema::posts::all_columns,
+};
 use infrastructure::establish_connection;
 use rocket::response::status::NotFound;
 
@@ -19,16 +22,22 @@ pub fn view_post(post_id: i32) -> Result<Post, NotFound<String>> {
     map_diesel_result(result)
 }
 
-pub fn list_recent_posts(limit: usize) -> Vec<Post> {
+pub fn list_recent_posts(limit: usize) -> Vec<PostWithUser> {
     use domain::schema::posts::dsl::*;
+    use domain::schema::users;
 
     let result = posts
         .order(created_at.desc())
         .limit(limit as i64)
-        .load::<Post>(&mut establish_connection());
+        .inner_join(users::table.on(users::id.eq(user_id)))
+        .select(POST_WITH_USER_COLUMNS)
+        .load::<JoinedPostWithUser>(&mut establish_connection());
 
     match result {
-        Ok(post_list) => post_list,
+        Ok(post_list) => post_list
+            .iter()
+            .map(|x: &JoinedPostWithUser| x.convert())
+            .collect(),
         Err(err) => match err {
             _ => {
                 panic!("Database error - {}", err);

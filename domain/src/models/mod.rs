@@ -15,3 +15,6 @@ pub use relations::*;
 
 mod user;
 pub use user::*;
+
+mod joined;
+pub use joined::*;

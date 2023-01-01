@@ -5,7 +5,9 @@ use domain::models::{NewComment, NewPost};
 use rocket::response::status::{Created, NotFound};
 use rocket::serde::json::Json;
 use rocket::{get, post};
-use shared::response_models::{CommentsRespone, PostResponse, PostsResponse};
+use shared::response_models::{
+    CommentsRespone, PostResponse, PostsResponse, PostsWithUsersResponse,
+};
 
 #[get("/posts/<post_id>")]
 pub fn view_post_handler(post_id: i32) -> Result<String, NotFound<String>> {
@@ -49,7 +51,7 @@ pub fn list_recent_posts_handler(limit: Option<usize>) -> Result<String, NotFoun
     let limit = limit.unwrap_or(25);
     let posts = read::list_recent_posts(limit);
 
-    let response = PostsResponse { posts };
+    let response = PostsWithUsersResponse { posts };
 
     Ok(serde_json::to_string(&response).unwrap())
 }

@@ -33,19 +33,3 @@ pub struct NewPost {
     pub tags: Vec<String>,
     pub photographer_id: Option<i32>,
 }
-
-#[derive(Identifiable, Queryable, Associations, Serialize, Debug)]
-#[diesel(belongs_to(User))]
-#[diesel(table_name = posts)]
-pub struct PostWithUser {
-    pub id: i32,
-    pub caption: Option<String>,
-    pub description: Option<String>,
-    pub user_id: i32,
-    pub tags: Vec<Option<String>>,
-    pub photographer_id: Option<i32>,
-    pub lat: Option<f32>,
-    pub lon: Option<f32>,
-    //https://stackoverflow.com/questions/38676229/timestamp-in-rusts-diesel-library-with-postgres
-    pub created_at: SystemTime,
-}
