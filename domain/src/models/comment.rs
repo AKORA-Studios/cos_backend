@@ -11,11 +11,15 @@ use std::time::SystemTime;
 #[derive(Identifiable, Queryable, Serialize, Associations, PartialEq, Eq, Debug)]
 #[diesel(belongs_to(Post))]
 #[diesel(table_name = comments)]
+#[diesel(primary_key(id))]
 pub struct Comment {
     pub id: i32,
     pub content: String,
     pub user_id: i32,
     pub post_id: i32,
+
+    pub reply_to: Option<i32>,
+    pub upvotes: i32,
     pub created_at: SystemTime,
 }
 

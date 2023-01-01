@@ -8,4 +8,5 @@ edition = "2021"
 [dependencies]
 rocket = { workspace = true }
 diesel = { workspace = true }
+diesel-derive-enum = { version = "2.0.0-rc.0", features = ["postgres"] }
 serde = { workspace = true }

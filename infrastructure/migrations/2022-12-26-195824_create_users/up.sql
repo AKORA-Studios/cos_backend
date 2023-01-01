@@ -18,7 +18,7 @@ CREATE TABLE users (
     -- maybe myanime list etc
 );
 
-CREATE TABLE followers(
+CREATE TABLE user_followers(
     "user_id"       INT NOT NULL REFERENCES users(id),
     "follower_id"   INT NOT NULL REFERENCES users(id),
     

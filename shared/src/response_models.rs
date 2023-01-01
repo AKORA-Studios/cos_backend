@@ -1,6 +1,6 @@
 // shared/src/response_models.rs
 
-use domain::models::{Comment, DisplayUser, Event, Message, Post};
+use domain::models::{Comment, DisplayUser, Event, Message, Post, PostWithUser};
 use rocket::serde::Serialize;
 
 #[derive(Serialize)]

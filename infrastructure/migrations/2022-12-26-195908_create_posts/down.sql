@@ -1,6 +1,6 @@
 -- down.sql
 
-DROP TABLE depicted_people;
-DROP TABLE likes;
-DROP TABLE downloads;
+DROP TABLE post_depicted_people;
+DROP TABLE post_likes;
+DROP TABLE post_downloads;
 DROP TABLE posts;

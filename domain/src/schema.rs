@@ -31,20 +31,6 @@ diesel::table! {
 }
 
 diesel::table! {
-    depicted_people (post_id, user_id) {
-        post_id -> Int4,
-        user_id -> Int4,
-    }
-}
-
-diesel::table! {
-    downloads (user_id, post_id) {
-        user_id -> Int4,
-        post_id -> Int4,
-    }
-}
-
-diesel::table! {
     events (id) {
         id -> Int4,
         name -> Varchar,
@@ -56,27 +42,34 @@ diesel::table! {
 }
 
 diesel::table! {
-    followers (user_id, follower_id) {
-        user_id -> Int4,
-        follower_id -> Int4,
+    messages (id) {
+        id -> Int4,
+        content -> Varchar,
+        attachment_id -> Nullable<Int4>,
+        from_id -> Int4,
+        to_id -> Int4,
+        created_at -> Timestamp,
     }
 }
 
 diesel::table! {
-    likes (user_id, post_id) {
+    post_depicted_people (post_id, user_id) {
+        post_id -> Int4,
+        user_id -> Int4,
+    }
+}
+
+diesel::table! {
+    post_downloads (user_id, post_id) {
         user_id -> Int4,
         post_id -> Int4,
     }
 }
 
 diesel::table! {
-    messages (id) {
-        id -> Int4,
-        content -> Varchar,
-        attachment_id -> Int4,
-        from_id -> Int4,
-        to_id -> Int4,
-        created_at -> Timestamp,
+    post_likes (user_id, post_id) {
+        user_id -> Int4,
+        post_id -> Int4,
     }
 }
 
@@ -91,6 +84,13 @@ diesel::table! {
         lat -> Nullable<Float8>,
         lon -> Nullable<Float8>,
         created_at -> Timestamp,
+    }
+}
+
+diesel::table! {
+    user_followers (user_id, follower_id) {
+        user_id -> Int4,
+        follower_id -> Int4,
     }
 }
 
@@ -112,23 +112,23 @@ diesel::table! {
 
 diesel::joinable!(comments -> posts (post_id));
 diesel::joinable!(comments -> users (user_id));
-diesel::joinable!(depicted_people -> posts (post_id));
-diesel::joinable!(depicted_people -> users (user_id));
-diesel::joinable!(downloads -> posts (post_id));
-diesel::joinable!(downloads -> users (user_id));
-diesel::joinable!(likes -> posts (post_id));
-diesel::joinable!(likes -> users (user_id));
 diesel::joinable!(messages -> attachments (attachment_id));
+diesel::joinable!(post_depicted_people -> posts (post_id));
+diesel::joinable!(post_depicted_people -> users (user_id));
+diesel::joinable!(post_downloads -> posts (post_id));
+diesel::joinable!(post_downloads -> users (user_id));
+diesel::joinable!(post_likes -> posts (post_id));
+diesel::joinable!(post_likes -> users (user_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     attachments,
     comments,
-    depicted_people,
-    downloads,
     events,
-    followers,
-    likes,
     messages,
+    post_depicted_people,
+    post_downloads,
+    post_likes,
     posts,
+    user_followers,
     users,
 );

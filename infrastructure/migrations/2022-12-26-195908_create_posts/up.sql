@@ -16,21 +16,21 @@ CREATE TABLE posts (
     "created_at"      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE depicted_people (
+CREATE TABLE post_depicted_people (
     "post_id"         INT NOT NULL REFERENCES posts(id),
     "user_id"         INT NOT NULL REFERENCES users(id),
 
     PRIMARY KEY ("post_id", "user_id")
 );
 
-CREATE TABLE likes(
+CREATE TABLE post_likes(
     "user_id" INT NOT NULL REFERENCES users(id),
     "post_id" INT NOT NULL REFERENCES posts(id),
     
     PRIMARY KEY ("user_id", "post_id")
 );
 
-CREATE TABLE downloads(
+CREATE TABLE post_downloads(
     "user_id" INT NOT NULL REFERENCES users(id),
     "post_id" INT NOT NULL REFERENCES posts(id),
     
