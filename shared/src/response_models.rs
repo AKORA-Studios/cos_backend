@@ -23,6 +23,12 @@ pub struct PostsResponse {
 
 #[derive(Serialize)]
 #[serde(crate = "rocket::serde")]
+pub struct PostsWithUsersResponse {
+    pub posts: Vec<PostWithUser>,
+}
+
+#[derive(Serialize)]
+#[serde(crate = "rocket::serde")]
 pub struct PostResponse {
     pub post: Post,
 }

@@ -1,3 +1,4 @@
 -- down.sql
 
-DROP TABLE users
+DROP TABLE followers;
+DROP TABLE users;
