@@ -24,6 +24,7 @@ COPY ./shared/Cargo.toml ./shared/Cargo.toml
 RUN cargo build --release
 
 # Copy the actual code
+RUN rm -rf api application domain infrastructure shared
 COPY . .
 
 # Build with precached dependencies
@@ -34,6 +35,8 @@ RUN cargo install --frozen --path ./api
 FROM alpine3.16 as runner
 RUN apk add --no-cache postgresql-client
 COPY --from=builder /usr/local/cargo/bin/api /usr/local/bin/api
+
+RUN echo DATABASE_URL=postgres://cos:password@db/cos > .env
 
 EXPOSE 8000
 CMD ["api"]
