@@ -23,8 +23,10 @@ COPY ./shared/Cargo.toml ./shared/Cargo.toml
 # but not if actualy code was changed 
 RUN cargo build --workspace --release
 
-# Copy the actual code
+# Clean up
 RUN rm -rf api application domain infrastructure shared
+RUN rm ./target/release/*.d ./target/release/*.rlib ./target/release/main
+# Copy the actual code
 COPY . .
 
 # Build with precached dependencies
