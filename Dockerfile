@@ -21,7 +21,7 @@ COPY ./shared/Cargo.toml ./shared/Cargo.toml
 # Build regardles of any code changes just to cache deps
 # This will only rebuild if any Cargo.toml file was changed
 # but not if actualy code was changed 
-RUN cargo build --release
+RUN cargo build --workspace --release
 
 # Copy the actual code
 RUN rm -rf api application domain infrastructure shared
