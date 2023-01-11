@@ -28,7 +28,7 @@ RUN rm -rf api application domain infrastructure shared
 COPY . .
 
 # Build with precached dependencies
-RUN cargo install --frozen --path ./api
+RUN cargo install --locked --path ./api
 
 
 
