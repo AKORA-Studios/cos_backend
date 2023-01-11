@@ -26,6 +26,7 @@ RUN cargo build --workspace --release
 # Clean up
 RUN rm -rf api application domain infrastructure shared
 RUN rm ./target/release/*.d ./target/release/*.rlib ./target/release/api
+RUN cargo clean -p infrastructure
 # Copy the actual code
 COPY . .
 
