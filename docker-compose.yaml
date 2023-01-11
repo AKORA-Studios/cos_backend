@@ -9,11 +9,12 @@ services:
     environment:
       POSTGRES_USER: cos
       POSTGRES_PASSWORD: password
-  api:
-    build: ./Dockerfile
-    restart: always
-    ports:
-      - 8000:8000
+
+#  api:
+#    build: ./Dockerfile
+#    restart: always
+#    ports:
+#      - 8000:8000
 
 volumes:
   cos_data:
