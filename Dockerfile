@@ -27,7 +27,7 @@ RUN cargo build --release
 COPY . .
 
 # Build with precached dependencies
-RUN cargo install --path ./api
+RUN cargo install --frozen --path ./api
 
 
 
