@@ -24,9 +24,14 @@ COPY ./shared/Cargo.toml ./shared/Cargo.toml
 RUN cargo build --workspace --release
 
 # Clean up
+RUN cargo clean -p api && \
+    cargo clean -p application && \
+    cargo clean -p domain && \
+    cargo clean -p infrastructure && \
+    cargo clean -p shared
+
 RUN rm -rf api application domain infrastructure shared
-RUN rm ./target/release/*.d ./target/release/*.rlib ./target/release/api
-RUN cargo clean -p infrastructure
+# RUN rm ./target/release/*.d ./target/release/*.rlib ./target/release/api
 # Copy the actual code
 COPY . .
 
