@@ -12,6 +12,7 @@ fn rocket() -> _ {
     rocket::build().mount(
         "/api",
         routes![
+            post_handler::view_post_handler,
             post_handler::list_today_posts_handler,
             post_handler::list_recent_posts_handler,
             post_handler::list_user_posts_handler,

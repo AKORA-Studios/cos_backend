@@ -28,8 +28,11 @@ pub struct Post {
 #[serde(crate = "rocket::serde")]
 #[diesel(table_name = posts)]
 pub struct NewPost {
-    pub description: String,
+    pub caption: Option<String>,
+    pub description: Option<String>,
     pub user_id: i32,
     pub tags: Vec<String>,
     pub photographer_id: Option<i32>,
+    pub lat: Option<f64>,
+    pub lon: Option<f64>,
 }
