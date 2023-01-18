@@ -19,6 +19,8 @@ CREATE TABLE users (
     -- maybe myanime list etc
 );
 
+CREATE INDEX user_username ON users (username);
+
 CREATE TABLE user_followers(
     "user_id"       INT NOT NULL REFERENCES users(id),
     "follower_id"   INT NOT NULL REFERENCES users(id),
