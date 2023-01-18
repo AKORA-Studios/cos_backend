@@ -16,8 +16,13 @@ use std::time::SystemTime;
 pub struct Message {
     pub id: i32,
     pub content: String,
+    /// ID of the attachment if present
     pub attachment_id: Option<i32>,
+    /// ID of the message this is a reply to
+    pub reply_to: Option<i32>,
+    /// User ID of message author
     pub from_id: i32,
+    /// User ID of message receiver
     pub to_id: i32,
     pub created_at: SystemTime,
 }

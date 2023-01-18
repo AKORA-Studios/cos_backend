@@ -15,14 +15,17 @@ pub struct User {
     pub username: String,
     pub nickname: String,
     pub password_hash: String,
+    pub email: String,
     //https://stackoverflow.com/questions/38676229/timestamp-in-rusts-diesel-library-with-postgres
     pub created_at: SystemTime,
+
     pub twitter_username: Option<String>,
     pub instagram_username: Option<String>,
     pub tiktok_username: Option<String>,
     pub onlyfans_username: Option<String>,
     pub snapchat_username: Option<String>,
     pub youtube_username: Option<String>,
+    pub myanimelist_username: Option<String>,
 }
 
 #[derive(Insertable, Deserialize)]
@@ -32,6 +35,7 @@ pub struct NewUser {
     pub username: String,
     pub nickname: String,
     pub password_hash: String,
+    pub email: String,
 
     pub twitter_username: Option<String>,
     pub instagram_username: Option<String>,
@@ -39,6 +43,7 @@ pub struct NewUser {
     pub onlyfans_username: Option<String>,
     pub snapchat_username: Option<String>,
     pub youtube_username: Option<String>,
+    pub myanimelist_username: Option<String>,
 }
 
 #[derive(Identifiable, Queryable, Serialize, PartialEq, Eq, Debug)]
@@ -56,6 +61,7 @@ pub struct DisplayUser {
     pub onlyfans_username: Option<String>,
     pub snapchat_username: Option<String>,
     pub youtube_username: Option<String>,
+    pub myanimelist_username: Option<String>,
 }
 
 type DisplayUserColumns = (
@@ -69,6 +75,7 @@ type DisplayUserColumns = (
     users::onlyfans_username,
     users::snapchat_username,
     users::youtube_username,
+    users::myanimelist_username,
 );
 
 pub const DISPLAY_USER_COLUMNS: DisplayUserColumns = (
@@ -82,4 +89,5 @@ pub const DISPLAY_USER_COLUMNS: DisplayUserColumns = (
     users::onlyfans_username,
     users::snapchat_username,
     users::youtube_username,
+    users::myanimelist_username,
 );

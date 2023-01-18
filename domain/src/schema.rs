@@ -46,6 +46,7 @@ diesel::table! {
         id -> Int4,
         content -> Varchar,
         attachment_id -> Nullable<Int4>,
+        reply_to -> Nullable<Int4>,
         from_id -> Int4,
         to_id -> Int4,
         created_at -> Timestamp,
@@ -100,6 +101,7 @@ diesel::table! {
         username -> Varchar,
         nickname -> Varchar,
         password_hash -> Varchar,
+        email -> Varchar,
         created_at -> Timestamp,
         twitter_username -> Nullable<Varchar>,
         instagram_username -> Nullable<Varchar>,
@@ -107,6 +109,7 @@ diesel::table! {
         onlyfans_username -> Nullable<Varchar>,
         snapchat_username -> Nullable<Varchar>,
         youtube_username -> Nullable<Varchar>,
+        myanimelist_username -> Nullable<Varchar>,
     }
 }
 

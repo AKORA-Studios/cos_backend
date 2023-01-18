@@ -15,7 +15,9 @@ CREATE TABLE attachments (
 CREATE TABLE messages (
     id              SERIAL PRIMARY KEY,
     content         VARCHAR(1024) NOT NULL,
+
     attachment_id   INT REFERENCES attachments(id),
+    reply_to        INT REFERENCES messages(id),
 
     from_id         INT NOT NULL REFERENCES users(id),
     to_id           INT NOT NULL REFERENCES users(id),
