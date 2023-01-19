@@ -1,5 +1,6 @@
 docker run -d \
     --name postgres-db \
+    --restart=always \
     -e POSTGRES_USER=cos \
     -e POSTGRES_PASSWORD=SkQm8ujbSHs4U80gRoMl \
     -p 5432:5432 \

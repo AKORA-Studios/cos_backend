@@ -1,6 +1,6 @@
 // shared/src/response_models.rs
 
-use domain::models::{Comment, DisplayUser, Event, Message, Post, PostWithUser};
+use domain::models::{Comment, DisplayUser, Event, FullPost, Message, Post};
 use rocket::serde::Serialize;
 
 #[derive(Serialize)]
@@ -15,6 +15,13 @@ pub struct MessageResponse {
     pub message: Message,
 }
 
+
+#[derive(Serialize)]
+#[serde(crate = "rocket::serde")]
+pub struct PostResponse {
+    pub post: Post,
+}
+
 #[derive(Serialize)]
 #[serde(crate = "rocket::serde")]
 pub struct PostsResponse {
@@ -23,15 +30,17 @@ pub struct PostsResponse {
 
 #[derive(Serialize)]
 #[serde(crate = "rocket::serde")]
-pub struct PostsWithUsersResponse {
-    pub posts: Vec<PostWithUser>,
+pub struct FullPostResponse {
+    pub post: FullPost,
 }
 
 #[derive(Serialize)]
 #[serde(crate = "rocket::serde")]
-pub struct PostResponse {
-    pub post: Post,
+pub struct FullPostsResponse {
+    pub posts: Vec<FullPost>,
 }
+
+
 
 #[derive(Serialize)]
 #[serde(crate = "rocket::serde")]

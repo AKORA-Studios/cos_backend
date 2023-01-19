@@ -5,14 +5,12 @@ use domain::models::{NewComment, NewPost};
 use rocket::response::status::{Created, NotFound};
 use rocket::serde::json::Json;
 use rocket::{get, post};
-use shared::response_models::{
-    CommentsRespone, PostResponse, PostsResponse, PostsWithUsersResponse,
-};
+use shared::response_models::{CommentsRespone, FullPostResponse, FullPostsResponse};
 
 #[get("/posts/<post_id>")]
 pub fn view_post_handler(post_id: i32) -> Result<String, NotFound<String>> {
     let post = read::view_post(post_id)?;
-    let response = PostResponse { post };
+    let response = FullPostResponse { post };
 
     Ok(serde_json::to_string(&response).unwrap())
 }
@@ -41,7 +39,7 @@ pub fn list_today_posts_handler(limit: Option<usize>) -> Result<String, NotFound
     let limit = limit.unwrap_or(25);
     let posts = read::list_today_posts(limit);
 
-    let response = PostsResponse { posts };
+    let response = FullPostsResponse { posts };
 
     Ok(serde_json::to_string(&response).unwrap())
 }
@@ -51,7 +49,7 @@ pub fn list_recent_posts_handler(limit: Option<usize>) -> Result<String, NotFoun
     let limit = limit.unwrap_or(25);
     let posts = read::list_recent_posts(limit);
 
-    let response = PostsWithUsersResponse { posts };
+    let response = FullPostsResponse { posts };
 
     Ok(serde_json::to_string(&response).unwrap())
 }
@@ -63,7 +61,7 @@ pub fn list_user_posts_handler(
 ) -> Result<String, NotFound<String>> {
     let limit = limit.unwrap_or(25);
     let posts = read::list_user_posts(user_id, limit);
-    let response = PostsResponse { posts };
+    let response = FullPostsResponse { posts };
 
     Ok(serde_json::to_string(&response).unwrap())
 }

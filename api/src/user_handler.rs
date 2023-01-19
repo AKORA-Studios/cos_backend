@@ -1,14 +1,14 @@
 // api/src/post_handler.rs
 
 use application::user::{create, read};
-use domain::models::NewAPIUser;
 use rocket::response::status::{Created, NotFound};
 use rocket::serde::json::Json;
 use rocket::{get, post};
+use shared::request_models::RegisterUser;
 use shared::response_models::UserResponse;
 
 #[post("/users/new", format = "application/json", data = "<user>")]
-pub fn create_user_handler(user: Json<NewAPIUser>) -> Created<String> {
+pub fn create_user_handler(user: Json<RegisterUser>) -> Created<String> {
     create::create_user(user)
 }
 

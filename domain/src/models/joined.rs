@@ -20,13 +20,14 @@ pub struct JoinedPostWithUser {
     pub lat: Option<f64>,
     pub lon: Option<f64>,
     pub created_at: SystemTime,
+
     pub username: String,
     pub nickname: String,
 }
 
 impl JoinedPostWithUser {
-    pub fn convert(&self) -> PostWithUser {
-        PostWithUser {
+    pub fn convert(&self, downloads: i64, likes: i64, depicted_people: Vec<i32>) -> FullPost {
+        FullPost {
             id: self.id,
             user: PostUserInfo {
                 user_id: self.user_id,
@@ -40,12 +41,16 @@ impl JoinedPostWithUser {
             lat: self.lat,
             lon: self.lon,
             created_at: self.created_at,
+
+            downloads,
+            likes,
+            depicted_people,
         }
     }
 }
 
 #[derive(Serialize, Debug)]
-pub struct PostWithUser {
+pub struct FullPost {
     pub id: i32,
     pub user: PostUserInfo,
     pub caption: Option<String>,
@@ -55,6 +60,10 @@ pub struct PostWithUser {
     pub lat: Option<f64>,
     pub lon: Option<f64>,
     pub created_at: SystemTime,
+
+    pub downloads: i64,
+    pub likes: i64,
+    pub depicted_people: Vec<i32>,
 }
 
 #[derive(Serialize, Debug)]

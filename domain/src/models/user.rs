@@ -2,7 +2,7 @@
 
 use crate::schema::users;
 use diesel::prelude::*;
-use rocket::serde::Deserialize;
+
 use serde::Serialize;
 use std::cmp::{Eq, PartialEq};
 use std::time::SystemTime;
@@ -34,23 +34,6 @@ pub struct NewUser {
     pub username: String,
     pub nickname: String,
     pub password_hash: String,
-    pub email: String,
-
-    pub twitter_username: Option<String>,
-    pub instagram_username: Option<String>,
-    pub tiktok_username: Option<String>,
-    pub onlyfans_username: Option<String>,
-    pub snapchat_username: Option<String>,
-    pub youtube_username: Option<String>,
-    pub myanimelist_username: Option<String>,
-}
-
-#[derive(Deserialize)]
-#[serde(crate = "rocket::serde")]
-pub struct NewAPIUser {
-    pub username: String,
-    pub nickname: String,
-    pub password: String,
     pub email: String,
 
     pub twitter_username: Option<String>,

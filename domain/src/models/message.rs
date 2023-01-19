@@ -44,6 +44,8 @@ pub struct Attachment {
 #[diesel(table_name = messages)]
 pub struct NewMessage {
     pub content: String,
+    pub attachment_id: Option<i32>,
+    pub reply_to: Option<i32>,
     pub from_id: i32,
     pub to_id: i32,
 }
