@@ -53,7 +53,9 @@ pub fn login_user(credentials: Json<LoginCredentials>) -> Result<String, Unautho
                             user_id: user.id,
                             username: user.username,
                             nickname: user.nickname,
+                            // !TODO expire time
                             exp: 0,
+                            // !TODO issued at time
                             iat: 0,
                         };
 
