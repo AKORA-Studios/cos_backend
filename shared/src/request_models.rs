@@ -16,3 +16,11 @@ pub struct RegisterUser {
     pub youtube_username: Option<String>,
     pub myanimelist_username: Option<String>,
 }
+
+#[derive(Deserialize)]
+#[serde(crate = "rocket::serde")]
+#[serde(untagged)]
+pub enum LoginCredentials {
+    UsernameCredentials { username: String, password: String },
+    EmailCredentials { email: String, password: String },
+}

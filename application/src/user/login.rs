@@ -1,60 +1,78 @@
 // application/src/user/create.rs
 
 use diesel::prelude::*;
-use domain::models::{DisplayUser, NewUser, DISPLAY_USER_COLUMNS};
+use diesel::result::Error as DieselError;
+use domain::models::User;
 use infrastructure::establish_connection;
-use rocket::response::status::Created;
+use rocket::response::status::Unauthorized;
 use rocket::serde::json::Json;
-use shared::{request_models::RegisterUser, response_models::UserResponse};
 
-use argon2::{
-    password_hash::{rand_core::OsRng, PasswordHasher, SaltString},
-    Argon2,
+use argon2::{Argon2, PasswordHash, PasswordVerifier};
+use shared::{
+    request_models::LoginCredentials,
+    response_models::{ErrorMessageResponse, TokenRespone},
 };
 
-fn hash_password(password: &[u8]) -> String {
-    let salt = SaltString::generate(&mut OsRng);
+use crate::auth::{self, JWTClaims};
 
-    // Argon2 with default params (Argon2id v19)
-    let argon2 = Argon2::default();
-
-    // Hash password to PHC string ($argon2id$v=19$...)
-    argon2
-        .hash_password(password, &salt)
-        .expect("Unable to hash password")
-        .to_string()
-}
-
-pub fn login_user(user: Json<RegisterUser>) -> Created<String> {
-    use domain::schema::users::dsl::*;
-
-    let user = user.into_inner();
-    let hashed_password = hash_password(user.password.as_bytes());
-    let user = NewUser {
-        username: user.username,
-        nickname: user.nickname,
-        password_hash: hashed_password,
-        email: user.email,
-
-        twitter_username: user.twitter_username,
-        instagram_username: user.instagram_username,
-        tiktok_username: user.tiktok_username,
-        onlyfans_username: user.onlyfans_username,
-        snapchat_username: user.snapchat_username,
-        youtube_username: user.youtube_username,
-        myanimelist_username: user.myanimelist_username,
+fn unauthorized<T>() -> Result<T, Unauthorized<String>> {
+    let response = ErrorMessageResponse {
+        message: format!("Invalid password or username"),
     };
 
-    match diesel::insert_into(users)
-        .values(&user)
-        .returning(DISPLAY_USER_COLUMNS)
-        .get_result::<DisplayUser>(&mut establish_connection())
-    {
-        Ok(user) => {
-            let response = UserResponse { user };
-            Created::new("").tagged_body(serde_json::to_string(&response).unwrap())
-        }
+    Err(Unauthorized(Some(
+        serde_json::to_string(&response).unwrap(),
+    )))
+}
+
+pub fn login_user(credentials: Json<LoginCredentials>) -> Result<String, Unauthorized<String>> {
+    use domain::schema::users;
+    let creds = credentials.into_inner();
+
+    let (password, result) = match creds {
+        LoginCredentials::UsernameCredentials { username, password } => (
+            password,
+            users::table
+                .filter(users::username.eq(username))
+                .first::<User>(&mut establish_connection()),
+        ),
+        LoginCredentials::EmailCredentials { email, password } => (
+            password,
+            users::table
+                .filter(users::email.eq(email))
+                .first::<User>(&mut establish_connection()),
+        ),
+    };
+
+    match result {
+        Ok(user) => match PasswordHash::new(&user.password_hash) {
+            Ok(parsed_hash) => {
+                match Argon2::default().verify_password(password.as_bytes(), &parsed_hash) {
+                    Ok(_a) => {
+                        let claims = JWTClaims {
+                            user_id: user.id,
+                            username: user.username,
+                            nickname: user.nickname,
+                            exp: 0,
+                            iat: 0,
+                        };
+
+                        match auth::create_token(claims) {
+                            Ok(token) => {
+                                let response = TokenRespone { token };
+
+                                Ok(serde_json::to_string(&response).unwrap())
+                            }
+                            Err(e) => panic!("JWT encoding error - {}", e),
+                        }
+                    }
+                    Err(_e) => unauthorized(),
+                }
+            }
+            Err(e) => panic!("Password hashing error - {}", e),
+        },
         Err(err) => match err {
+            DieselError::NotFound => unauthorized(),
             _ => {
                 panic!("Database error - {}", err);
             }

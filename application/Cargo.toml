@@ -12,7 +12,8 @@ shared = { path = "../shared" }
 
 diesel = { workspace = true }
 rocket = { workspace = true }
-
 serde_json = { workspace = true }
+
 argon2 = "0.4.1"
+jsonwebtoken = { version = "8", default-features = false }
 rand_core = { version = "0.6", features = ["std"] }

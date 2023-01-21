@@ -25,7 +25,7 @@ fn hash_password(password: &[u8]) -> String {
         .to_string()
 }
 
-pub fn create_user(user: Json<RegisterUser>) -> Created<String> {
+pub fn register_user(user: Json<RegisterUser>) -> Created<String> {
     use domain::schema::users::dsl::*;
 
     let user = user.into_inner();

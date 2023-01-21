@@ -20,6 +20,7 @@ CREATE TABLE users (
 );
 
 CREATE INDEX user_username ON users (username);
+CREATE INDEX user_email ON users (email);
 
 CREATE TABLE user_followers(
     "user_id"       INT NOT NULL REFERENCES users(id),

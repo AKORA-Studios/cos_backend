@@ -15,7 +15,6 @@ pub struct MessageResponse {
     pub message: Message,
 }
 
-
 #[derive(Serialize)]
 #[serde(crate = "rocket::serde")]
 pub struct PostResponse {
@@ -40,8 +39,6 @@ pub struct FullPostsResponse {
     pub posts: Vec<FullPost>,
 }
 
-
-
 #[derive(Serialize)]
 #[serde(crate = "rocket::serde")]
 pub struct UserResponse {
@@ -64,4 +61,10 @@ pub struct CommentRespone {
 #[serde(crate = "rocket::serde")]
 pub struct CommentsRespone {
     pub comments: Vec<Comment>,
+}
+
+#[derive(Serialize)]
+#[serde(crate = "rocket::serde")]
+pub struct TokenRespone {
+    pub token: String,
 }
