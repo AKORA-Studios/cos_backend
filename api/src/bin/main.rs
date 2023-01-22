@@ -29,7 +29,7 @@ fn rocket() -> _ {
             event_handler::view_event_handler,
             // MESSAGE
             message_handler::create_message_handler,
-            message_handler::view_message_handler,
+            message_handler::list_conversation_handler,
         ],
     )
 }

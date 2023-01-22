@@ -24,3 +24,11 @@ pub enum LoginCredentials {
     UsernameCredentials { username: String, password: String },
     EmailCredentials { email: String, password: String },
 }
+
+#[derive(Deserialize)]
+#[serde(crate = "rocket::serde")]
+pub struct SendMessage {
+    pub content: String,
+    pub attachment_id: Option<i32>,
+    pub reply_to: Option<i32>,
+}
