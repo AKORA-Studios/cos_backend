@@ -14,6 +14,7 @@ pub struct JWTClaims {
 }
 
 fn secret() -> String {
+    println!("{:?}", std::env::vars());
     std::env::var("JWT_SECRET").expect("JWT_SECRET must be set.")
 }
 
@@ -43,14 +44,21 @@ impl<'r> FromRequest<'r> for JWTClaims {
     type Error = jsonwebtoken::errors::Error;
 
     async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
-        let keys: Vec<_> = req.headers().get("Authentication").collect();
-        if keys.len() != 1 {
-            return Outcome::Forward(());
-        }
+        let token = req.headers().get_one("Authorization");
+        match token {
+            Some(token) => {
+                let token = if token.starts_with("Bearer ") {
+                    token.replace("Bearer ", "")
+                } else {
+                    token.to_owned()
+                };
 
-        match verify_token(keys[0]) {
-            Ok(claim) => Outcome::Success(claim),
-            Err(e) => Outcome::Failure((Status::Unauthorized, e)),
+                match verify_token(&token) {
+                    Ok(claim) => Outcome::Success(claim),
+                    Err(e) => Outcome::Failure((Status::Unauthorized, e)),
+                }
+            }
+            None => Outcome::Forward(()),
         }
     }
 }

@@ -12,6 +12,7 @@ use shared::{
     request_models::LoginCredentials,
     response_models::{ErrorMessageResponse, TokenRespone},
 };
+use std::time::{Duration, SystemTime};
 
 use crate::auth::{self, JWTClaims};
 
@@ -48,15 +49,26 @@ pub fn login_user(credentials: Json<LoginCredentials>) -> Result<String, Unautho
         Ok(user) => match PasswordHash::new(&user.password_hash) {
             Ok(parsed_hash) => {
                 match Argon2::default().verify_password(password.as_bytes(), &parsed_hash) {
-                    Ok(_a) => {
+                    Ok(_) => {
+                        let issued_at = SystemTime::now();
+                        let expires_at = SystemTime::now() + Duration::from_secs(60 * 60 * 8);
+
+                        let iat = issued_at
+                            .duration_since(SystemTime::UNIX_EPOCH)
+                            .unwrap()
+                            .as_secs();
+
+                        let exp = expires_at
+                            .duration_since(SystemTime::UNIX_EPOCH)
+                            .unwrap()
+                            .as_secs();
+
                         let claims = JWTClaims {
                             user_id: user.id,
                             username: user.username,
                             nickname: user.nickname,
-                            // !TODO expire time
-                            exp: 0,
-                            // !TODO issued at time
-                            iat: 0,
+                            exp: exp as usize,
+                            iat: iat as usize,
                         };
 
                         match auth::create_token(claims) {

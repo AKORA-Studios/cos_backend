@@ -1,4 +1,5 @@
 // api/src/bin/main.rs
+use dotenvy::dotenv;
 
 #[macro_use]
 extern crate rocket;
@@ -9,6 +10,8 @@ use api::user_handler;
 
 #[launch]
 fn rocket() -> _ {
+    dotenv().ok();
+
     rocket::build().mount(
         "/api",
         routes![
