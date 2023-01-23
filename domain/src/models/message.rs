@@ -42,7 +42,7 @@ pub struct Attachment {
 #[derive(Insertable, Deserialize)]
 #[serde(crate = "rocket::serde")]
 #[diesel(table_name = messages)]
-pub struct NewMessage {
+pub struct InsertableMessage {
     pub content: String,
     pub attachment_id: Option<i32>,
     pub reply_to: Option<i32>,
@@ -53,7 +53,7 @@ pub struct NewMessage {
 #[derive(Insertable, Deserialize)]
 #[serde(crate = "rocket::serde")]
 #[diesel(table_name = attachments)]
-pub struct NewAttachment {
+pub struct InsertableAttachment {
     pub url: String,
     pub content_type: ContentType,
     pub created_at: SystemTime,

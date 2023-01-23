@@ -1,11 +1,11 @@
 // application/src/message/create.rs
 
 use diesel::prelude::*;
-use domain::models::{Message, NewMessage};
+use domain::models::{InsertableMessage, Message};
 use infrastructure::establish_connection;
 use rocket::response::status::Created;
 use rocket::serde::json::Json;
-use shared::request_models::SendMessage;
+use shared::request_models::NewMessage;
 use shared::response_models::MessageResponse;
 
 use crate::auth::JWTClaims;
@@ -13,12 +13,12 @@ use crate::auth::JWTClaims;
 pub fn create_message(
     from_user: JWTClaims,
     to_user_id: i32,
-    msg: Json<SendMessage>,
+    msg: Json<NewMessage>,
 ) -> Created<String> {
     use domain::schema::messages::dsl::*;
 
     let msg = msg.into_inner();
-    let msg = NewMessage {
+    let msg = InsertableMessage {
         attachment_id: msg.attachment_id,
         content: msg.content,
         from_id: from_user.user_id,

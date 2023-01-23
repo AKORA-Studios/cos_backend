@@ -27,7 +27,7 @@ pub enum LoginCredentials {
 
 #[derive(Deserialize)]
 #[serde(crate = "rocket::serde")]
-pub struct SendMessage {
+pub struct NewMessage {
     pub content: String,
     pub attachment_id: Option<i32>,
     pub reply_to: Option<i32>,

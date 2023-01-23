@@ -1,7 +1,7 @@
 // application/src/user/create.rs
 
 use diesel::prelude::*;
-use domain::models::{DisplayUser, NewUser, DISPLAY_USER_COLUMNS};
+use domain::models::{DisplayUser, InsertableUser, DISPLAY_USER_COLUMNS};
 use infrastructure::establish_connection;
 use rocket::response::status::Created;
 use rocket::serde::json::Json;
@@ -30,7 +30,7 @@ pub fn register_user(user: Json<RegisterUser>) -> Created<String> {
 
     let user = user.into_inner();
     let hashed_password = hash_password(user.password.as_bytes());
-    let user = NewUser {
+    let user = InsertableUser {
         username: user.username,
         nickname: user.nickname,
         password_hash: hashed_password,

@@ -27,7 +27,7 @@ pub struct Post {
 #[derive(Insertable, Deserialize)]
 #[serde(crate = "rocket::serde")]
 #[diesel(table_name = posts)]
-pub struct NewPost {
+pub struct InsertablePost {
     pub caption: Option<String>,
     pub description: Option<String>,
     pub user_id: i32,

@@ -5,7 +5,7 @@ use application::message::{create, read};
 use rocket::response::status::{Created, NotFound};
 use rocket::serde::json::Json;
 use rocket::{get, post};
-use shared::request_models::SendMessage;
+use shared::request_models::NewMessage;
 use shared::response_models::MessagesResponse;
 
 #[post(
@@ -16,7 +16,7 @@ use shared::response_models::MessagesResponse;
 pub fn create_message_handler(
     user: JWTClaims,
     to_user_id: i32,
-    msg: Json<SendMessage>,
+    msg: Json<NewMessage>,
 ) -> Created<String> {
     create::create_message(user, to_user_id, msg)
 }

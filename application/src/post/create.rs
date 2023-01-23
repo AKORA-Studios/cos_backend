@@ -1,13 +1,13 @@
 // application/src/post/create.rs
 
 use diesel::prelude::*;
-use domain::models::{NewPost, Post};
+use domain::models::{InsertablePost, Post};
 use infrastructure::establish_connection;
 use rocket::response::status::Created;
 use rocket::serde::json::Json;
 use shared::response_models::PostResponse;
 
-pub fn create_post(post: Json<NewPost>) -> Created<String> {
+pub fn create_post(post: Json<InsertablePost>) -> Created<String> {
     use domain::schema::posts;
 
     let post = post.into_inner();

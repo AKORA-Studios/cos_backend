@@ -28,7 +28,7 @@ pub struct Comment {
 #[derive(Insertable, Deserialize)]
 #[serde(crate = "rocket::serde")]
 #[diesel(table_name = comments)]
-pub struct NewComment {
+pub struct InsertableComment {
     pub content: String,
     pub user_id: i32,
     pub post_id: i32,

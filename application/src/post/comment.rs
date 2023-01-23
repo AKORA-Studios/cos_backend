@@ -1,13 +1,13 @@
 // application/src/post/comment.rs
 
 use diesel::prelude::*;
-use domain::models::{Comment, NewComment};
+use domain::models::{Comment, InsertableComment};
 use infrastructure::establish_connection;
 use rocket::response::status::Created;
 use rocket::serde::json::Json;
 use shared::response_models::CommentRespone;
 
-pub fn create_post_comment(comment: Json<NewComment>) -> Created<String> {
+pub fn create_post_comment(comment: Json<InsertableComment>) -> Created<String> {
     use domain::schema::comments::dsl::*;
 
     let comment = comment.into_inner();

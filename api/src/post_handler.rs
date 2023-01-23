@@ -2,7 +2,7 @@
 
 use application::auth::JWTClaims;
 use application::post::{comment, create, interact, read};
-use domain::models::{NewComment, NewPost};
+use domain::models::{InsertableComment, InsertablePost};
 use rocket::response::status::{Created, NotFound};
 use rocket::serde::json::Json;
 use rocket::{get, post};
@@ -33,7 +33,7 @@ pub fn download_post_handler(user: JWTClaims, post_id: i32) -> Result<(), NotFou
 
 // !TODO use post_id in url
 #[post("/posts/comments/new", format = "application/json", data = "<comment>")]
-pub fn create_comment_handler(comment: Json<NewComment>) -> Created<String> {
+pub fn create_comment_handler(comment: Json<InsertableComment>) -> Created<String> {
     comment::create_post_comment(comment)
 }
 
@@ -83,6 +83,6 @@ pub fn list_user_posts_handler(
 }
 
 #[post("/posts/new", format = "application/json", data = "<post>")]
-pub fn create_post_handler(post: Json<NewPost>) -> Created<String> {
+pub fn create_post_handler(post: Json<InsertablePost>) -> Created<String> {
     create::create_post(post)
 }

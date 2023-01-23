@@ -30,7 +30,7 @@ pub struct User {
 
 #[derive(Insertable)]
 #[diesel(table_name = users)]
-pub struct NewUser {
+pub struct InsertableUser {
     pub username: String,
     pub nickname: String,
     pub password_hash: String,
