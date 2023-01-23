@@ -23,6 +23,10 @@ fn rocket() -> _ {
             post_handler::create_post_handler,
             post_handler::create_comment_handler,
             post_handler::list_recent_comments_handler,
+            // INTERACT
+            post_handler::like_post_handler,
+            post_handler::dislike_post_handler,
+            post_handler::download_post_handler,
             // USER
             user_handler::register_user_handler,
             user_handler::login_user_handler,

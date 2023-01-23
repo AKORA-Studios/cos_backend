@@ -2,4 +2,5 @@
 
 pub mod comment;
 pub mod create;
+pub mod interact;
 pub mod read;

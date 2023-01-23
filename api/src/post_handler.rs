@@ -1,6 +1,7 @@
 // api/src/post_handler.rs
 
-use application::post::{comment, create, read};
+use application::auth::JWTClaims;
+use application::post::{comment, create, interact, read};
 use domain::models::{NewComment, NewPost};
 use rocket::response::status::{Created, NotFound};
 use rocket::serde::json::Json;
@@ -13,6 +14,21 @@ pub fn view_post_handler(post_id: i32) -> Result<String, NotFound<String>> {
     let response = FullPostResponse { post };
 
     Ok(serde_json::to_string(&response).unwrap())
+}
+
+#[post("/posts/<post_id>/like")]
+pub fn like_post_handler(user: JWTClaims, post_id: i32) -> Result<(), NotFound<String>> {
+    interact::like_post(user.user_id, post_id)
+}
+
+#[post("/posts/<post_id>/dislike")]
+pub fn dislike_post_handler(user: JWTClaims, post_id: i32) -> Result<(), NotFound<String>> {
+    interact::dislike_post(user.user_id, post_id)
+}
+
+#[post("/posts/<post_id>/download")]
+pub fn download_post_handler(user: JWTClaims, post_id: i32) -> Result<(), NotFound<String>> {
+    interact::download_post(user.user_id, post_id)
 }
 
 // !TODO use post_id in url

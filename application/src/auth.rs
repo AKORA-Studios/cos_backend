@@ -14,7 +14,6 @@ pub struct JWTClaims {
 }
 
 fn secret() -> String {
-    println!("{:?}", std::env::vars());
     std::env::var("JWT_SECRET").expect("JWT_SECRET must be set.")
 }
 
