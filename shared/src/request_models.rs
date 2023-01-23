@@ -32,3 +32,10 @@ pub struct NewMessage {
     pub attachment_id: Option<i32>,
     pub reply_to: Option<i32>,
 }
+
+#[derive(Deserialize)]
+#[serde(crate = "rocket::serde")]
+pub struct NewComment {
+    pub content: String,
+    pub reply_to: Option<i32>,
+}

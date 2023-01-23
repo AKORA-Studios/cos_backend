@@ -38,9 +38,15 @@ pub fn verify_token(token: &str) -> Result<JWTClaims, jsonwebtoken::errors::Erro
 
 use rocket::request::{FromRequest, Outcome, Request};
 
+#[derive(Debug)]
+pub enum AuthError {
+    JWTError(jsonwebtoken::errors::Error),
+    MissingToken,
+}
+
 #[rocket::async_trait]
 impl<'r> FromRequest<'r> for JWTClaims {
-    type Error = jsonwebtoken::errors::Error;
+    type Error = AuthError;
 
     async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
         let token = req.headers().get_one("Authorization");
@@ -54,10 +60,10 @@ impl<'r> FromRequest<'r> for JWTClaims {
 
                 match verify_token(&token) {
                     Ok(claim) => Outcome::Success(claim),
-                    Err(e) => Outcome::Failure((Status::Unauthorized, e)),
+                    Err(e) => Outcome::Failure((Status::Unauthorized, AuthError::JWTError(e))),
                 }
             }
-            None => Outcome::Forward(()),
+            None => Outcome::Failure((Status::Unauthorized, AuthError::MissingToken)),
         }
     }
 }

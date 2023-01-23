@@ -2,10 +2,11 @@
 
 use application::auth::JWTClaims;
 use application::post::{comment, create, interact, read};
-use domain::models::{InsertableComment, InsertablePost};
+use domain::models::InsertablePost;
 use rocket::response::status::{Created, NotFound};
 use rocket::serde::json::Json;
 use rocket::{get, post};
+use shared::request_models::NewComment;
 use shared::response_models::{CommentsRespone, FullPostResponse, FullPostsResponse};
 
 #[get("/posts/<post_id>")]
@@ -32,9 +33,17 @@ pub fn download_post_handler(user: JWTClaims, post_id: i32) -> Result<(), NotFou
 }
 
 // !TODO use post_id in url
-#[post("/posts/comments/new", format = "application/json", data = "<comment>")]
-pub fn create_comment_handler(comment: Json<InsertableComment>) -> Created<String> {
-    comment::create_post_comment(comment)
+#[post(
+    "/posts/<post_id>/comments/new",
+    format = "application/json",
+    data = "<comment>"
+)]
+pub fn create_comment_handler(
+    user: JWTClaims,
+    post_id: i32,
+    comment: Json<NewComment>,
+) -> Created<String> {
+    comment::create_post_comment(user.user_id, post_id, comment)
 }
 
 #[get("/posts/<post_id>/comments/recent?<limit>")]

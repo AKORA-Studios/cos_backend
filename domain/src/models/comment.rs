@@ -3,7 +3,7 @@ use diesel::prelude::*;
 
 use super::post::Post;
 use crate::schema::comments;
-use rocket::serde::{Deserialize, Serialize};
+use rocket::serde::Serialize;
 use std::cmp::{Eq, PartialEq};
 use std::time::SystemTime;
 
@@ -25,11 +25,11 @@ pub struct Comment {
 
 // !TODO replies
 
-#[derive(Insertable, Deserialize)]
-#[serde(crate = "rocket::serde")]
+#[derive(Insertable)]
 #[diesel(table_name = comments)]
 pub struct InsertableComment {
     pub content: String,
     pub user_id: i32,
     pub post_id: i32,
+    pub reply_to: Option<i32>,
 }

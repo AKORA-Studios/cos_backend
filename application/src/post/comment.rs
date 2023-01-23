@@ -5,14 +5,25 @@ use domain::models::{Comment, InsertableComment};
 use infrastructure::establish_connection;
 use rocket::response::status::Created;
 use rocket::serde::json::Json;
+use shared::request_models::NewComment;
 use shared::response_models::CommentRespone;
 
-pub fn create_post_comment(comment: Json<InsertableComment>) -> Created<String> {
-    use domain::schema::comments::dsl::*;
+pub fn create_post_comment(
+    user_id: i32,
+    post_id: i32,
+    comment: Json<NewComment>,
+) -> Created<String> {
+    use domain::schema::comments;
 
-    let comment = comment.into_inner();
+    let comment_data = comment.into_inner();
+    let comment = InsertableComment {
+        content: comment_data.content,
+        reply_to: comment_data.reply_to,
+        user_id,
+        post_id,
+    };
 
-    match diesel::insert_into(comments)
+    match diesel::insert_into(comments::table)
         .values(&comment)
         .get_result::<Comment>(&mut establish_connection())
     {
