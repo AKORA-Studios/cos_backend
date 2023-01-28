@@ -32,6 +32,8 @@ fn rocket() -> _ {
             user_handler::register_user_handler,
             user_handler::login_user_handler,
             user_handler::view_user_handler,
+            user_handler::view_me_handler,
+            user_handler::patch_me_handler,
             // INTERACT
             user_handler::follow_user_handler,
             user_handler::unfollow_user_handler,

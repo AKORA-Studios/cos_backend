@@ -3,7 +3,7 @@
 use crate::schema::users;
 use diesel::prelude::*;
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::cmp::{Eq, PartialEq};
 use std::time::SystemTime;
 
@@ -63,7 +63,7 @@ pub struct DisplayUser {
     pub myanimelist_username: Option<String>,
 }
 
-type DisplayUserColumns = (
+pub type DisplayUserColumns = (
     users::id,
     users::username,
     users::nickname,
@@ -90,3 +90,19 @@ pub const DISPLAY_USER_COLUMNS: DisplayUserColumns = (
     users::youtube_username,
     users::myanimelist_username,
 );
+
+#[derive(AsChangeset, Deserialize)]
+#[serde(crate = "rocket::serde")]
+#[diesel(table_name = users)]
+#[diesel(treat_none_as_null = true)]
+pub struct PatchedUser {
+    pub nickname: String,
+
+    pub twitter_username: Option<String>,
+    pub instagram_username: Option<String>,
+    pub tiktok_username: Option<String>,
+    pub onlyfans_username: Option<String>,
+    pub snapchat_username: Option<String>,
+    pub youtube_username: Option<String>,
+    pub myanimelist_username: Option<String>,
+}
