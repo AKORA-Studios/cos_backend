@@ -2,12 +2,16 @@
 
 use application::auth::JWTClaims;
 use application::post::{comment, create, interact, read};
-use domain::models::InsertablePost;
 use rocket::response::status::{Created, NotFound};
 use rocket::serde::json::Json;
-use rocket::{delete, get, post};
-use shared::request_models::NewComment;
+use rocket::{delete, get, post, put};
+use shared::request_models::{NewComment, NewPost};
 use shared::response_models::{CommentsRespone, FullPostResponse, FullPostsResponse};
+
+#[post("/posts/new", format = "application/json", data = "<post>")]
+pub fn create_post_handler(user: JWTClaims, post: Json<NewPost>) -> Created<String> {
+    create::create_post(user.user_id, post)
+}
 
 #[get("/posts/<post_id>")]
 pub fn view_post_handler(post_id: i32) -> Result<String, NotFound<String>> {
@@ -22,17 +26,17 @@ pub fn delete_post_handler(user: JWTClaims, post_id: i32) -> Result<(), NotFound
     interact::delete_post(user.user_id, post_id)
 }
 
-#[post("/posts/<post_id>/like")]
+#[put("/posts/<post_id>/like")]
 pub fn like_post_handler(user: JWTClaims, post_id: i32) -> Result<(), NotFound<String>> {
     interact::like_post(user.user_id, post_id)
 }
 
-#[post("/posts/<post_id>/dislike")]
+#[put("/posts/<post_id>/dislike")]
 pub fn dislike_post_handler(user: JWTClaims, post_id: i32) -> Result<(), NotFound<String>> {
     interact::dislike_post(user.user_id, post_id)
 }
 
-#[post("/posts/<post_id>/download")]
+#[put("/posts/<post_id>/download")]
 pub fn download_post_handler(user: JWTClaims, post_id: i32) -> Result<(), NotFound<String>> {
     interact::download_post(user.user_id, post_id)
 }
@@ -94,9 +98,4 @@ pub fn list_user_posts_handler(
     let response = FullPostsResponse { posts };
 
     Ok(serde_json::to_string(&response).unwrap())
-}
-
-#[post("/posts/new", format = "application/json", data = "<post>")]
-pub fn create_post_handler(post: Json<InsertablePost>) -> Created<String> {
-    create::create_post(post)
 }

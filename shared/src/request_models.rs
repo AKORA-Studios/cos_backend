@@ -39,3 +39,14 @@ pub struct NewComment {
     pub content: String,
     pub reply_to: Option<i32>,
 }
+
+#[derive(Deserialize)]
+#[serde(crate = "rocket::serde")]
+pub struct NewPost {
+    pub caption: Option<String>,
+    pub description: Option<String>,
+    pub tags: Vec<String>,
+    pub photographer_id: Option<i32>,
+    pub lat: Option<f64>,
+    pub lon: Option<f64>,
+}

@@ -4,7 +4,7 @@ use application::auth::JWTClaims;
 use application::user::{interact, login, read, register};
 use rocket::response::status::{Created, NotFound, Unauthorized};
 use rocket::serde::json::Json;
-use rocket::{get, post};
+use rocket::{get, post, put};
 use shared::request_models::{LoginCredentials, RegisterUser};
 use shared::response_models::UserResponse;
 
@@ -28,22 +28,22 @@ pub fn view_user_handler(user_id: i32) -> Result<String, NotFound<String>> {
     Ok(serde_json::to_string(&response).unwrap())
 }
 
-#[post("/users/<user_id>/follow")]
+#[put("/users/<user_id>/follow")]
 pub fn follow_user_handler(user: JWTClaims, user_id: i32) -> Result<(), NotFound<String>> {
     interact::follow_user(user.user_id, user_id)
 }
 
-#[post("/users/<user_id>/unfollow")]
+#[put("/users/<user_id>/unfollow")]
 pub fn unfollow_user_handler(user: JWTClaims, user_id: i32) -> Result<(), NotFound<String>> {
     interact::unfollow_user(user.user_id, user_id)
 }
 
-#[post("/users/<user_id>/block")]
+#[put("/users/<user_id>/block")]
 pub fn block_user_handler(user: JWTClaims, user_id: i32) -> Result<(), NotFound<String>> {
     interact::block_user(user.user_id, user_id)
 }
 
-#[post("/users/<user_id>/unblock")]
+#[put("/users/<user_id>/unblock")]
 pub fn unblock_user_handler(user: JWTClaims, user_id: i32) -> Result<(), NotFound<String>> {
     interact::unblock_user(user.user_id, user_id)
 }
