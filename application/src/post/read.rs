@@ -12,6 +12,8 @@ use rocket::response::status::NotFound;
 
 use crate::util::map_diesel_result;
 
+// !TODO Also return users if they already liked a post or not
+
 pub fn view_post(post_id: i32) -> Result<FullPost, NotFound<String>> {
     use domain::schema::posts::dsl::*;
     use domain::schema::users;
