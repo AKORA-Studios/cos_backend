@@ -5,7 +5,7 @@ use application::post::{comment, create, interact, read};
 use domain::models::InsertablePost;
 use rocket::response::status::{Created, NotFound};
 use rocket::serde::json::Json;
-use rocket::{get, post};
+use rocket::{delete, get, post};
 use shared::request_models::NewComment;
 use shared::response_models::{CommentsRespone, FullPostResponse, FullPostsResponse};
 
@@ -15,6 +15,11 @@ pub fn view_post_handler(post_id: i32) -> Result<String, NotFound<String>> {
     let response = FullPostResponse { post };
 
     Ok(serde_json::to_string(&response).unwrap())
+}
+
+#[delete("/posts/<post_id>")]
+pub fn delete_post_handler(user: JWTClaims, post_id: i32) -> Result<(), NotFound<String>> {
+    interact::delete_post(user.user_id, post_id)
 }
 
 #[post("/posts/<post_id>/like")]

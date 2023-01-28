@@ -24,6 +24,7 @@ fn rocket() -> _ {
             post_handler::create_comment_handler,
             post_handler::list_recent_comments_handler,
             // INTERACT
+            post_handler::delete_post_handler,
             post_handler::like_post_handler,
             post_handler::dislike_post_handler,
             post_handler::download_post_handler,

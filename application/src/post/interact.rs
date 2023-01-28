@@ -6,6 +6,20 @@ use infrastructure::establish_connection;
 use rocket::response::status::NotFound;
 use shared::response_models::ErrorMessageResponse;
 
+/// IMPORTANT: User ID is required so users cannot delete arbitrary posts,
+/// the user ID should be the ID of the user interacting with this API
+pub fn delete_post(user_id: i32, post_id: i32) -> Result<(), NotFound<String>> {
+    use domain::schema::posts;
+
+    let filter = posts::id.eq(post_id).and(posts::user_id.eq(user_id));
+
+    let result = diesel::delete(posts::table)
+        .filter(filter)
+        .execute(&mut establish_connection());
+
+    map_error(result)
+}
+
 pub fn like_post(user_id: i32, post_id: i32) -> Result<(), NotFound<String>> {
     use domain::schema::post_likes;
 
