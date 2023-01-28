@@ -89,9 +89,16 @@ diesel::table! {
 }
 
 diesel::table! {
-    user_followers (user_id, follower_id) {
+    user_blocked (user_id, blocked_id) {
         user_id -> Int4,
-        follower_id -> Int4,
+        blocked_id -> Int4,
+    }
+}
+
+diesel::table! {
+    user_follows (user_id, following_id) {
+        user_id -> Int4,
+        following_id -> Int4,
     }
 }
 
@@ -132,6 +139,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     post_downloads,
     post_likes,
     posts,
-    user_followers,
+    user_blocked,
+    user_follows,
     users,
 );

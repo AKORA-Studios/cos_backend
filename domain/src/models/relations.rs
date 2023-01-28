@@ -3,7 +3,7 @@ use diesel::prelude::*;
 
 use super::post::Post;
 use super::user::User;
-use crate::schema::{post_depicted_people, post_downloads, post_likes, user_followers};
+use crate::schema::{post_depicted_people, post_downloads, post_likes, user_blocked, user_follows};
 
 #[derive(Identifiable, Queryable, Insertable, Associations, Debug)]
 #[diesel(belongs_to(Post, foreign_key = post_id))]
@@ -34,9 +34,18 @@ pub struct PostLikes {
 
 #[derive(Identifiable, Queryable, Insertable, Associations, Debug)]
 #[diesel(belongs_to(User, foreign_key = user_id))]
-#[diesel(table_name = user_followers)]
-#[diesel(primary_key(user_id, follower_id))]
-pub struct UserFollowers {
+#[diesel(table_name = user_follows)]
+#[diesel(primary_key(user_id, following_id))]
+pub struct UserFollows {
     pub user_id: i32,
-    pub follower_id: i32,
+    pub following_id: i32,
+}
+
+#[derive(Identifiable, Queryable, Insertable, Associations, Debug)]
+#[diesel(belongs_to(User, foreign_key = user_id))]
+#[diesel(table_name = user_blocked)]
+#[diesel(primary_key(user_id, blocked_id))]
+pub struct UserBlocked {
+    pub user_id: i32,
+    pub blocked_id: i32,
 }

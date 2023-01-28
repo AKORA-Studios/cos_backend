@@ -1,19 +1,12 @@
 // api/src/post_handler.rs
 
-use application::user::{login, read, register};
+use application::auth::JWTClaims;
+use application::user::{interact, login, read, register};
 use rocket::response::status::{Created, NotFound, Unauthorized};
 use rocket::serde::json::Json;
 use rocket::{get, post};
 use shared::request_models::{LoginCredentials, RegisterUser};
 use shared::response_models::UserResponse;
-
-#[get("/users/<user_id>")]
-pub fn view_user_handler(user_id: i32) -> Result<String, NotFound<String>> {
-    let user = read::view_user(user_id)?;
-    let response = UserResponse { user };
-
-    Ok(serde_json::to_string(&response).unwrap())
-}
 
 #[post("/login", format = "application/json", data = "<credentials>")]
 pub fn login_user_handler(
@@ -25,4 +18,32 @@ pub fn login_user_handler(
 #[post("/register", format = "application/json", data = "<user>")]
 pub fn register_user_handler(user: Json<RegisterUser>) -> Created<String> {
     register::register_user(user)
+}
+
+#[get("/users/<user_id>")]
+pub fn view_user_handler(user_id: i32) -> Result<String, NotFound<String>> {
+    let user = read::view_user(user_id)?;
+    let response = UserResponse { user };
+
+    Ok(serde_json::to_string(&response).unwrap())
+}
+
+#[post("/users/<user_id>/follow")]
+pub fn follow_user_handler(user: JWTClaims, user_id: i32) -> Result<(), NotFound<String>> {
+    interact::follow_user(user.user_id, user_id)
+}
+
+#[post("/users/<user_id>/unfollow")]
+pub fn unfollow_user_handler(user: JWTClaims, user_id: i32) -> Result<(), NotFound<String>> {
+    interact::unfollow_user(user.user_id, user_id)
+}
+
+#[post("/users/<user_id>/block")]
+pub fn block_user_handler(user: JWTClaims, user_id: i32) -> Result<(), NotFound<String>> {
+    interact::block_user(user.user_id, user_id)
+}
+
+#[post("/users/<user_id>/unblock")]
+pub fn unblock_user_handler(user: JWTClaims, user_id: i32) -> Result<(), NotFound<String>> {
+    interact::unblock_user(user.user_id, user_id)
 }
