@@ -3,7 +3,7 @@ use diesel::prelude::*;
 
 use super::user::User;
 use crate::schema::posts;
-use rocket::serde::{Deserialize, Serialize};
+use rocket::serde::Serialize;
 use std::time::SystemTime;
 
 // https://docs.diesel.rs/diesel/associations/index.html#traits
@@ -24,8 +24,7 @@ pub struct Post {
     pub created_at: SystemTime,
 }
 
-#[derive(Insertable, Deserialize)]
-#[serde(crate = "rocket::serde")]
+#[derive(Insertable)]
 #[diesel(table_name = posts)]
 pub struct InsertablePost {
     pub caption: Option<String>,
