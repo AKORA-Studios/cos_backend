@@ -3,7 +3,7 @@
 use diesel::prelude::*;
 use diesel::result::Error as DieselError;
 use domain::models::User;
-use infrastructure::establish_connection;
+
 use rocket::response::status::Unauthorized;
 use rocket::serde::json::Json;
 
@@ -26,7 +26,10 @@ fn unauthorized<T>() -> Result<T, Unauthorized<String>> {
     )))
 }
 
-pub fn login_user(credentials: Json<LoginCredentials>) -> Result<String, Unauthorized<String>> {
+pub fn login_user(
+    db_conn: &mut PgConnection,
+    credentials: Json<LoginCredentials>,
+) -> Result<String, Unauthorized<String>> {
     use domain::schema::users;
     let creds = credentials.into_inner();
 
@@ -35,13 +38,13 @@ pub fn login_user(credentials: Json<LoginCredentials>) -> Result<String, Unautho
             password,
             users::table
                 .filter(users::username.eq(username))
-                .first::<User>(&mut establish_connection()),
+                .first::<User>(db_conn),
         ),
         LoginCredentials::EmailCredentials { email, password } => (
             password,
             users::table
                 .filter(users::email.eq(email))
-                .first::<User>(&mut establish_connection()),
+                .first::<User>(db_conn),
         ),
     };
 

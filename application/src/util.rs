@@ -1,6 +1,4 @@
 use diesel::result::Error as DieselError;
-use diesel::PgConnection;
-use infrastructure::establish_connection;
 use rocket::response::status::NotFound;
 use shared::response_models::ErrorMessageResponse;
 
@@ -18,17 +16,5 @@ pub fn map_diesel_result<T>(result: Result<T, DieselError>) -> Result<T, NotFoun
                 panic!("Database error - {}", err);
             }
         },
-    }
-}
-
-use rocket::request::{FromRequest, Outcome, Request};
-pub struct DbConn(PgConnection);
-
-#[rocket::async_trait]
-impl<'r> FromRequest<'r> for DbConn {
-    type Error = jsonwebtoken::errors::Error;
-
-    async fn from_request(_req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
-        Outcome::Success(DbConn(establish_connection()))
     }
 }

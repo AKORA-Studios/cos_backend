@@ -1,18 +1,28 @@
 // api/src/bin/main.rs
 use dotenvy::dotenv;
+use std::env;
 
 #[macro_use]
 extern crate rocket;
-use api::event_handler;
-use api::message_handler;
-use api::post_handler;
-use api::user_handler;
+use api::{event_handler, message_handler, post_handler, user_handler};
+use infrastructure::DbConn;
+use rocket::figment::map;
+use rocket::figment::value::{Map, Value};
 
 #[launch]
 fn rocket() -> _ {
     dotenv().ok();
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set.");
 
-    rocket::build().mount(
+    let db: Map<_, Value> = map! {
+        "url" => database_url.into(),
+        "pool_size" => 10.into(),
+        "timeout" => 5.into(),
+    };
+
+    let figment = rocket::Config::figment().merge(("databases", map!["cos" => db]));
+
+    rocket::custom(figment).attach(DbConn::fairing()).mount(
         "/api",
         routes![
             // POST

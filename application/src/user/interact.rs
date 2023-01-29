@@ -2,11 +2,15 @@
 
 use diesel::prelude::*;
 use domain::models::{UserBlocked, UserFollows};
-use infrastructure::establish_connection;
+
 use rocket::response::status::NotFound;
 use shared::response_models::ErrorMessageResponse;
 
-pub fn follow_user(user_id: i32, following_id: i32) -> Result<(), NotFound<String>> {
+pub fn follow_user(
+    db_conn: &mut PgConnection,
+    user_id: i32,
+    following_id: i32,
+) -> Result<(), NotFound<String>> {
     use domain::schema::user_follows;
 
     let val = UserFollows {
@@ -16,12 +20,16 @@ pub fn follow_user(user_id: i32, following_id: i32) -> Result<(), NotFound<Strin
 
     let result = diesel::insert_into(user_follows::table)
         .values(&val)
-        .execute(&mut establish_connection());
+        .execute(db_conn);
 
     map_error(result)
 }
 
-pub fn unfollow_user(user_id: i32, following_id: i32) -> Result<(), NotFound<String>> {
+pub fn unfollow_user(
+    db_conn: &mut PgConnection,
+    user_id: i32,
+    following_id: i32,
+) -> Result<(), NotFound<String>> {
     use domain::schema::user_follows;
 
     let filter = user_follows::user_id
@@ -30,12 +38,16 @@ pub fn unfollow_user(user_id: i32, following_id: i32) -> Result<(), NotFound<Str
 
     let result = diesel::delete(user_follows::table)
         .filter(filter)
-        .execute(&mut establish_connection());
+        .execute(db_conn);
 
     map_error(result)
 }
 
-pub fn block_user(user_id: i32, blocked_id: i32) -> Result<(), NotFound<String>> {
+pub fn block_user(
+    db_conn: &mut PgConnection,
+    user_id: i32,
+    blocked_id: i32,
+) -> Result<(), NotFound<String>> {
     use domain::schema::user_blocked;
 
     let val = UserBlocked {
@@ -45,12 +57,16 @@ pub fn block_user(user_id: i32, blocked_id: i32) -> Result<(), NotFound<String>>
 
     let result = diesel::insert_into(user_blocked::table)
         .values(&val)
-        .execute(&mut establish_connection());
+        .execute(db_conn);
 
     map_error(result)
 }
 
-pub fn unblock_user(user_id: i32, blocked_id: i32) -> Result<(), NotFound<String>> {
+pub fn unblock_user(
+    db_conn: &mut PgConnection,
+    user_id: i32,
+    blocked_id: i32,
+) -> Result<(), NotFound<String>> {
     use domain::schema::user_blocked;
 
     let filter = user_blocked::user_id
@@ -59,7 +75,7 @@ pub fn unblock_user(user_id: i32, blocked_id: i32) -> Result<(), NotFound<String
 
     let result = diesel::delete(user_blocked::table)
         .filter(filter)
-        .execute(&mut establish_connection());
+        .execute(db_conn);
 
     map_error(result)
 }

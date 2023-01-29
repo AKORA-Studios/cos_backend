@@ -2,7 +2,6 @@
 
 use diesel::prelude::*;
 use domain::models::{DisplayUser, InsertableUser, DISPLAY_USER_COLUMNS};
-use infrastructure::establish_connection;
 use rocket::response::status::Created;
 use rocket::serde::json::Json;
 use shared::{request_models::RegisterUser, response_models::UserResponse};
@@ -25,7 +24,7 @@ fn hash_password(password: &[u8]) -> String {
         .to_string()
 }
 
-pub fn register_user(user: Json<RegisterUser>) -> Created<String> {
+pub fn register_user(conn: &mut PgConnection, user: Json<RegisterUser>) -> Created<String> {
     use domain::schema::users::dsl::*;
 
     let user = user.into_inner();
@@ -48,7 +47,7 @@ pub fn register_user(user: Json<RegisterUser>) -> Created<String> {
     match diesel::insert_into(users)
         .values(&user)
         .returning(DISPLAY_USER_COLUMNS)
-        .get_result::<DisplayUser>(&mut establish_connection())
+        .get_result::<DisplayUser>(conn)
     {
         Ok(user) => {
             let response = UserResponse { user };

@@ -2,22 +2,24 @@
 
 use diesel::prelude::*;
 use domain::models::Message;
-use infrastructure::establish_connection;
+
 use rocket::response::status::NotFound;
 
 use crate::util::map_diesel_result;
 
-pub fn view_message(message_id: i32) -> Result<Message, NotFound<String>> {
+pub fn view_message(
+    db_conn: &mut PgConnection,
+    message_id: i32,
+) -> Result<Message, NotFound<String>> {
     use domain::schema::messages::dsl::*;
 
-    let result = messages
-        .find(message_id)
-        .first::<Message>(&mut establish_connection());
+    let result = messages.find(message_id).first::<Message>(db_conn);
 
     map_diesel_result(result)
 }
 
 pub fn list_messages(
+    db_conn: &mut PgConnection,
     user1_id: i32,
     user2_id: i32,
     limit: u32,
@@ -35,7 +37,7 @@ pub fn list_messages(
     let result = messages::table
         .filter(filter1.or(filter2))
         .limit(limit.into())
-        .load::<Message>(&mut establish_connection());
+        .load::<Message>(db_conn);
 
     map_diesel_result(result)
 }

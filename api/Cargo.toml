@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 domain = { path = "../domain" }
 application = { path = "../application" }
+infrastructure = { path = "../infrastructure" }
 shared = { path = "../shared" }
 
 rocket = { workspace = true }
