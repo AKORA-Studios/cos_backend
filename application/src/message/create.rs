@@ -2,7 +2,7 @@
 
 use diesel::prelude::*;
 use domain::models::{InsertableMessage, Message};
-use infrastructure::establish_connection;
+
 use rocket::response::status::Created;
 use rocket::serde::json::Json;
 use shared::request_models::NewMessage;
@@ -11,6 +11,7 @@ use shared::response_models::MessageResponse;
 use crate::auth::JWTClaims;
 
 pub fn create_message(
+    db_conn: &mut PgConnection,
     from_user: JWTClaims,
     to_user_id: i32,
     msg: Json<NewMessage>,
@@ -28,7 +29,7 @@ pub fn create_message(
 
     match diesel::insert_into(messages)
         .values(&msg)
-        .get_result::<Message>(&mut establish_connection())
+        .get_result::<Message>(db_conn)
     {
         Ok(message) => {
             let response = MessageResponse { message };

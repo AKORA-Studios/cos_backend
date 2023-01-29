@@ -2,13 +2,17 @@
 
 use diesel::prelude::*;
 use domain::models::{InsertablePost, Post};
-use infrastructure::establish_connection;
+
 use rocket::response::status::Created;
 use rocket::serde::json::Json;
 use shared::request_models::NewPost;
 use shared::response_models::PostResponse;
 
-pub fn create_post(user_id: i32, post: Json<NewPost>) -> Created<String> {
+pub fn create_post(
+    db_conn: &mut PgConnection,
+    user_id: i32,
+    post: Json<NewPost>,
+) -> Created<String> {
     use domain::schema::posts;
 
     let post = post.into_inner();
@@ -24,7 +28,7 @@ pub fn create_post(user_id: i32, post: Json<NewPost>) -> Created<String> {
 
     match diesel::insert_into(posts::table)
         .values(&post)
-        .get_result::<Post>(&mut establish_connection())
+        .get_result::<Post>(db_conn)
     {
         Ok(post) => {
             let response = PostResponse { post };

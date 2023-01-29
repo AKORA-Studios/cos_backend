@@ -1,15 +1,20 @@
 // infrastructure/src/lib.rs
+use rocket_sync_db_pools::{database, diesel};
 
-use diesel::pg::PgConnection;
-use diesel::prelude::*;
-use dotenvy::dotenv;
-use std::env;
+#[database("cos")]
+pub struct DbConn(diesel::PgConnection);
 
-pub fn establish_connection() -> PgConnection {
-    dotenv().ok();
+/*
+#[rocket::async_trait]
+impl<'r> rocket::request::FromRequest<'r> for DbConn {
+    type Error = ();
 
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set.");
-
-    PgConnection::establish(&database_url)
-        .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
+    async fn from_request(
+        __r: &'r rocket::request::Request<'_>,
+    ) -> rocket::request::Outcome<Self, ()> {
+        rocket_sync_db_pools::Connection::<DbConn, diesel::PgConnection>::from_request(__r)
+            .await
+            .map(Self)
+    }
 }
+ */

@@ -2,12 +2,13 @@
 
 use diesel::prelude::*;
 use domain::models::{DisplayUser, PatchedUser, DISPLAY_USER_COLUMNS};
-use infrastructure::establish_connection;
+
 use rocket::{response::status::NotFound, serde::json::Json};
 
 use crate::util::map_diesel_result;
 
 pub fn modify_user(
+    conn: &mut PgConnection,
     user_id: i32,
     patch_data: Json<PatchedUser>,
 ) -> Result<DisplayUser, NotFound<String>> {
@@ -19,7 +20,7 @@ pub fn modify_user(
 
     let result = statement
         .returning(DISPLAY_USER_COLUMNS)
-        .get_result::<DisplayUser>(&mut establish_connection());
+        .get_result::<DisplayUser>(conn);
 
     map_diesel_result(result)
 }

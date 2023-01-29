@@ -2,13 +2,14 @@
 
 use diesel::prelude::*;
 use domain::models::{Comment, InsertableComment};
-use infrastructure::establish_connection;
+
 use rocket::response::status::Created;
 use rocket::serde::json::Json;
 use shared::request_models::NewComment;
 use shared::response_models::CommentRespone;
 
 pub fn create_post_comment(
+    db_conn: &mut PgConnection,
     user_id: i32,
     post_id: i32,
     comment: Json<NewComment>,
@@ -25,7 +26,7 @@ pub fn create_post_comment(
 
     match diesel::insert_into(comments::table)
         .values(&comment)
-        .get_result::<Comment>(&mut establish_connection())
+        .get_result::<Comment>(db_conn)
     {
         Ok(comment) => {
             let response = CommentRespone { comment };
@@ -39,14 +40,18 @@ pub fn create_post_comment(
     }
 }
 
-pub fn list_recent_comments(c_post_id: i32, limit: usize) -> Vec<Comment> {
+pub fn list_recent_comments(
+    db_conn: &mut PgConnection,
+    c_post_id: i32,
+    limit: usize,
+) -> Vec<Comment> {
     use domain::schema::comments::dsl::*;
 
     let result = comments
         .filter(post_id.eq(c_post_id))
         .order(created_at.desc())
         .limit(limit as i64)
-        .load::<Comment>(&mut establish_connection());
+        .load::<Comment>(db_conn);
 
     match result {
         Ok(comment_list) => comment_list,
