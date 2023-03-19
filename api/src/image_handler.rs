@@ -8,7 +8,7 @@ use rocket::http::Status;
 use rocket::tokio::fs::File;
 use rocket::{get, put, Data};
 
-const UPLOAD_DIR: &'static str = concat!(env!("CARGO_MANIFEST_DIR"), "../images");
+const UPLOAD_DIR: &'static str = concat!(env!("CARGO_MANIFEST_DIR"), "/../images");
 
 fn profile_picture_path(user_id: i32) -> PathBuf {
     PathBuf::from(format!("{UPLOAD_DIR}/users/{user_id}"))

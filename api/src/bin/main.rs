@@ -26,7 +26,7 @@ fn rocket() -> _ {
 
     // Create image directories if missing
     {
-        let upload_dir = concat!(env!("CARGO_MANIFEST_DIR"), "../images");
+        let upload_dir = concat!(env!("CARGO_MANIFEST_DIR"), "/../images");
         fs::create_dir_all(format!("{upload_dir}/users"))
             .expect("Unable to create user images upload dir");
         fs::create_dir_all(format!("{upload_dir}/posts"))
