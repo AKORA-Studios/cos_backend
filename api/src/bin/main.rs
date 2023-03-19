@@ -9,6 +9,8 @@ use infrastructure::DbConn;
 use rocket::figment::map;
 use rocket::figment::value::{Map, Value};
 
+use std::fs;
+
 #[launch]
 fn rocket() -> _ {
     dotenv().ok();
@@ -21,6 +23,17 @@ fn rocket() -> _ {
     };
 
     let figment = rocket::Config::figment().merge(("databases", map!["cos" => db]));
+
+    // Create image directories if missing
+    {
+        let upload_dir = concat!(env!("CARGO_MANIFEST_DIR"), "../images");
+        fs::create_dir_all(format!("{upload_dir}/users"))
+            .expect("Unable to create user images upload dir");
+        fs::create_dir_all(format!("{upload_dir}/posts"))
+            .expect("Unable to create post images upload dir");
+        fs::create_dir_all(format!("{upload_dir}/events"))
+            .expect("Unable to create event images upload dir");
+    }
 
     rocket::custom(figment).attach(DbConn::fairing()).mount(
         "/api",
