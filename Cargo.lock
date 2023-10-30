@@ -626,6 +626,9 @@ dependencies = [
 [[package]]
 name = "infrastructure"
 version = "0.1.0"
+dependencies = [
+ "sqlx",
+]
 
 [[package]]
 name = "instant"

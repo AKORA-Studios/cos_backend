@@ -1,10 +1,10 @@
 // infrastructure/src/lib.rs
+/*
 use rocket_sync_db_pools::{database, diesel};
 
 #[database("cos")]
 pub struct DbConn(diesel::PgConnection);
 
-/*
 #[rocket::async_trait]
 impl<'r> rocket::request::FromRequest<'r> for DbConn {
     type Error = ();
@@ -18,3 +18,7 @@ impl<'r> rocket::request::FromRequest<'r> for DbConn {
     }
 }
  */
+
+pub async fn run_migrations() {
+    sqlx::migrate!("migrations")
+}

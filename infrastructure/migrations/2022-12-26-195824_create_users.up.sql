@@ -1,5 +1,5 @@
 -- up.sql
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     "id"                   SERIAL PRIMARY KEY,
     "username"             VARCHAR(256) NOT NULL UNIQUE, -- !TODO figure out a good length
     "nickname"             VARCHAR(256) NOT NULL,
@@ -19,5 +19,5 @@ CREATE TABLE users (
     -- maybe myanime list etc
 );
 
-CREATE INDEX user_username ON users (username);
-CREATE INDEX user_email ON users (email);
+CREATE INDEX IF NOT EXISTS user_username ON users (username);
+CREATE INDEX IF NOT EXISTS user_email ON users (email);
