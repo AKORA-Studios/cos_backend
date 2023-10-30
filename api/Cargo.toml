@@ -11,6 +11,8 @@ application = { path = "../application" }
 infrastructure = { path = "../infrastructure" }
 shared = { path = "../shared" }
 
-rocket = { workspace = true }
 serde_json = { workspace = true }
+
+axum = { workspace = true }
+
 dotenvy = "0.15.6"

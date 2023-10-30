@@ -50,6 +50,8 @@ pub fn list_recent_posts(db_conn: &mut PgConnection, limit: usize) -> Vec<FullPo
         .select(POST_WITH_USER_COLUMNS)
         .load::<JoinedPostWithUser>(db_conn);
 
+    sql::query("SELECT * FROM posts JOIN users ON users.id = posts.post_id WITH LIMIT = ? ORDER posts.created_at DESC");
+
     match result {
         Ok(post_list) => post_list
             .iter()

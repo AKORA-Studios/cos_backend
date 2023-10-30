@@ -10,8 +10,8 @@ domain = { path = "../domain" }
 infrastructure = { path = "../infrastructure" }
 shared = { path = "../shared" }
 
-diesel = { workspace = true }
-rocket = { workspace = true }
+sqlx = { workspace = true }
+axum = { workspace = true }
 serde_json = { workspace = true }
 
 argon2 = "0.4.1"

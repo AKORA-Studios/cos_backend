@@ -1,16 +1,10 @@
 // domain/src/models.rs
-use diesel::prelude::*;
-
-use super::user::User;
-use crate::schema::posts;
-use rocket::serde::Serialize;
+use serde::Serialize;
 use std::time::SystemTime;
 
 // https://docs.diesel.rs/diesel/associations/index.html#traits
 // Queryable will generate the code needed to load the struct from an SQL statement
-#[derive(Identifiable, Queryable, Serialize, Associations, Debug)]
-#[diesel(belongs_to(User))]
-#[diesel(table_name = posts)]
+#[derive(sqlx::FromRow, Serialize, Debug)]
 pub struct Post {
     pub id: i32,
     pub caption: Option<String>,
@@ -24,8 +18,6 @@ pub struct Post {
     pub created_at: SystemTime,
 }
 
-#[derive(Insertable)]
-#[diesel(table_name = posts)]
 pub struct InsertablePost {
     pub caption: Option<String>,
     pub description: Option<String>,

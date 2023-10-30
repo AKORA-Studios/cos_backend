@@ -1,3 +1,4 @@
 /target
 /.env
 images
+api_docs.json

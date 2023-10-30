@@ -1,15 +1,10 @@
 // domain/src/models.rs
-
-use crate::schema::users;
-use diesel::prelude::*;
-
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use std::cmp::{Eq, PartialEq};
 use std::time::SystemTime;
 
 // Queryable will generate the code needed to load the struct from an SQL statement
-#[derive(Identifiable, Queryable, Serialize, PartialEq, Eq, Debug)]
-#[diesel(table_name = users)]
+#[derive(sqlx::FromRow, Serialize, PartialEq, Eq, Debug)]
 pub struct User {
     pub id: i32,
     pub username: String,
@@ -28,8 +23,6 @@ pub struct User {
     pub myanimelist_username: Option<String>,
 }
 
-#[derive(Insertable)]
-#[diesel(table_name = users)]
 pub struct InsertableUser {
     pub username: String,
     pub nickname: String,
@@ -45,8 +38,7 @@ pub struct InsertableUser {
     pub myanimelist_username: Option<String>,
 }
 
-#[derive(Identifiable, Queryable, Serialize, PartialEq, Eq, Debug)]
-#[diesel(table_name = users)]
+#[derive(sqlx::FromRow, Serialize, PartialEq, Eq, Debug)]
 pub struct DisplayUser {
     pub id: i32,
     pub username: String,
@@ -62,6 +54,8 @@ pub struct DisplayUser {
     pub youtube_username: Option<String>,
     pub myanimelist_username: Option<String>,
 }
+
+/*
 
 pub type DisplayUserColumns = (
     users::id,
@@ -106,3 +100,4 @@ pub struct PatchedUser {
     pub youtube_username: Option<String>,
     pub myanimelist_username: Option<String>,
 }
+*/

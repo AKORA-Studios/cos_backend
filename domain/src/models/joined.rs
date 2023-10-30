@@ -1,15 +1,8 @@
 use std::time::SystemTime;
 
-use diesel::prelude::*;
-
-use crate::models::user::User;
-use crate::schema::{posts, users};
-
 use serde::Serialize;
 
-#[derive(Identifiable, Queryable, Associations, Debug)]
-#[diesel(belongs_to(User))]
-#[diesel(table_name = posts)]
+#[derive(sqlx::FromRow, Debug)]
 pub struct JoinedPostWithUser {
     pub id: i32,
     pub caption: Option<String>,
@@ -73,6 +66,7 @@ pub struct PostUserInfo {
     pub nickname: String,
 }
 
+/*
 type PostWithUserColumns = (
     posts::id,
     posts::caption,
@@ -100,3 +94,4 @@ pub const POST_WITH_USER_COLUMNS: PostWithUserColumns = (
     users::username,
     users::nickname,
 );
+*/

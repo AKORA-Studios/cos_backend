@@ -1,4 +1,6 @@
 // domain/src/models.rs
+/*
+
 use diesel::prelude::*;
 
 use super::post::Post;
@@ -49,3 +51,4 @@ pub struct UserBlocked {
     pub user_id: i32,
     pub blocked_id: i32,
 }
+*/

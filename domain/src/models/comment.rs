@@ -1,17 +1,11 @@
+use serde::Serialize;
 // domain/src/models.rs
-use diesel::prelude::*;
 
-use super::post::Post;
-use crate::schema::comments;
-use rocket::serde::Serialize;
 use std::cmp::{Eq, PartialEq};
 use std::time::SystemTime;
 
 // Queryable will generate the code needed to load the struct from an SQL statement
-#[derive(Identifiable, Queryable, Serialize, Associations, PartialEq, Eq, Debug)]
-#[diesel(belongs_to(Post))]
-#[diesel(table_name = comments)]
-#[diesel(primary_key(id))]
+#[derive(sqlx::FromRow, Serialize, PartialEq, Eq, Debug)]
 pub struct Comment {
     pub id: i32,
     pub content: String,
@@ -24,9 +18,6 @@ pub struct Comment {
 }
 
 // !TODO replies
-
-#[derive(Insertable)]
-#[diesel(table_name = comments)]
 pub struct InsertableComment {
     pub content: String,
     pub user_id: i32,

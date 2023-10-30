@@ -1,5 +1,5 @@
 // @generated automatically by Diesel CLI.
-
+/*
 pub mod sql_types {
     #[derive(diesel::sql_types::SqlType)]
     #[diesel(postgres_type(name = "content_type"))]
@@ -143,3 +143,4 @@ diesel::allow_tables_to_appear_in_same_query!(
     user_follows,
     users,
 );
+*/

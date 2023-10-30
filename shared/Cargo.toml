@@ -8,5 +8,5 @@ edition = "2021"
 [dependencies]
 domain = { path = "../domain" }
 
-rocket = { workspace = true }
+axum = { workspace = true }
 serde = { workspace = true, features = ["derive"] }

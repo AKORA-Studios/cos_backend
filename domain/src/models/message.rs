@@ -1,18 +1,12 @@
 // domain/src/models.rs
-use diesel::prelude::*;
-
-use super::user::User;
-use crate::schema::{attachments, messages};
-use crate::sql_types::ContentType;
-use rocket::serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use std::cmp::{Eq, PartialEq};
 use std::time::SystemTime;
 
+use crate::sql_types::ContentType;
+
 // Queryable will generate the code needed to load the struct from an SQL statement
-#[derive(Identifiable, Queryable, Serialize, Associations, PartialEq, Eq, Debug)]
-#[serde(crate = "rocket::serde")]
-#[diesel(belongs_to(User, foreign_key = to_id))]
-#[diesel(table_name = messages)]
+#[derive(sqlx::FromRow, Serialize, PartialEq, Eq, Debug)]
 pub struct Message {
     pub id: i32,
     pub content: String,
@@ -28,10 +22,7 @@ pub struct Message {
 }
 
 // Queryable will generate the code needed to load the struct from an SQL statement
-#[derive(Identifiable, Queryable, Serialize, Debug)]
-#[serde(crate = "rocket::serde")]
-#[diesel(table_name = attachments)]
-#[diesel(primary_key(id))]
+#[derive(sqlx::FromRow, Serialize, Debug)]
 pub struct Attachment {
     pub id: i32,
     pub url: String,
@@ -39,9 +30,7 @@ pub struct Attachment {
     pub created_at: SystemTime,
 }
 
-#[derive(Insertable, Deserialize)]
-#[serde(crate = "rocket::serde")]
-#[diesel(table_name = messages)]
+#[derive(Deserialize)]
 pub struct InsertableMessage {
     pub content: String,
     pub attachment_id: Option<i32>,
@@ -50,9 +39,7 @@ pub struct InsertableMessage {
     pub to_id: i32,
 }
 
-#[derive(Insertable, Deserialize)]
-#[serde(crate = "rocket::serde")]
-#[diesel(table_name = attachments)]
+#[derive(Deserialize)]
 pub struct InsertableAttachment {
     pub url: String,
     pub content_type: ContentType,
