@@ -1,5 +1,5 @@
 -- up.sql
-CREATE TABLE posts (
+CREATE TABLE IF NOT EXISTS posts (
     "id"              SERIAL PRIMARY KEY,
     "caption"         VARCHAR(256),
     "description"     VARCHAR(1024),
@@ -16,21 +16,21 @@ CREATE TABLE posts (
     "created_at"      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE post_depicted_people (
+CREATE TABLE IF NOT EXISTS post_depicted_people (
     "post_id"         INT NOT NULL REFERENCES posts(id),
     "user_id"         INT NOT NULL REFERENCES users(id),
 
     PRIMARY KEY ("post_id", "user_id")
 );
 
-CREATE TABLE post_likes(
+CREATE TABLE IF NOT EXISTS post_likes(
     "user_id" INT NOT NULL REFERENCES users(id),
     "post_id" INT NOT NULL REFERENCES posts(id),
     
     PRIMARY KEY ("user_id", "post_id")
 );
 
-CREATE TABLE post_downloads(
+CREATE TABLE IF NOT EXISTS post_downloads(
     "user_id" INT NOT NULL REFERENCES users(id),
     "post_id" INT NOT NULL REFERENCES posts(id),
     

@@ -1,5 +1,5 @@
 -- up.sql
-CREATE TABLE comments (
+CREATE TABLE IF NOT EXISTS comments (
     "id"          SERIAL PRIMARY KEY,
     "content"     VARCHAR(1024) NOT NULL,
     
