@@ -2,27 +2,26 @@
 use dotenvy::dotenv;
 use std::env;
 
-#[macro_use]
-extern crate rocket;
 use api::{event_handler, image_handler, message_handler, post_handler, user_handler};
-use infrastructure::DbConn;
-use rocket::figment::map;
-use rocket::figment::value::{Map, Value};
 
 use std::fs;
 
-#[launch]
-fn rocket() -> _ {
+use axum::{
+    http::StatusCode,
+    response::IntoResponse,
+    routing::{get, post},
+    Json, Router,
+};
+use std::net::SocketAddr;
+
+use sqlx::postgres::{PgPool, PgPoolOptions};
+use tokio::net::TcpListener;
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+
+#[tokio::main]
+async fn main() {
     dotenv().ok();
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set.");
-
-    let db: Map<_, Value> = map! {
-        "url" => database_url.into(),
-        "pool_size" => 10.into(),
-        "timeout" => 5.into(),
-    };
-
-    let figment = rocket::Config::figment().merge(("databases", map!["cos" => db]));
 
     // Create image directories if missing
     {
@@ -34,6 +33,45 @@ fn rocket() -> _ {
         fs::create_dir_all(format!("{upload_dir}/events"))
             .expect("Unable to create event images upload dir");
     }
+
+    // initialize tracing
+    tracing_subscriber::fmt::init();
+
+    // set up connection pool
+    let pool = PgPoolOptions::new()
+        .max_connections(5)
+        //.acquire_timeout(Duration::from_secs(3))
+        .connect(&db_connection_str)
+        .await
+        .expect("can't connect to database");
+
+    // build our application with a route
+    let app = Router::new()
+        // `GET /` goes to `root`
+        .route("/", get(root))
+        // `POST /users` goes to `create_user`
+        .route("/users", post(create_user))
+        .with_state(pool);
+
+    // run our app with hyper
+    // `axum::Server` is a re-export of `hyper::Server`
+    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    tracing::debug!("listening on {}", addr);
+    axum::Server::bind(&addr)
+        .serve(app.into_make_service())
+        .await
+        .unwrap();
+}
+
+/*
+fn rocket() -> _ {
+    let db: Map<_, Value> = map! {
+        "url" => database_url.into(),
+        "pool_size" => 10.into(),
+        "timeout" => 5.into(),
+    };
+
+    let figment = rocket::Config::figment().merge(("databases", map!["cos" => db]));
 
     rocket::custom(figment)
         .attach(DbConn::fairing())
@@ -82,3 +120,4 @@ fn rocket() -> _ {
             ],
         )
 }
+ */

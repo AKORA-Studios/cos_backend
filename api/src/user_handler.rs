@@ -2,21 +2,12 @@
 
 use application::auth::JWTClaims;
 use application::user::{interact, login, modify, read, register};
+use axum::extract::State;
+use axum::Json;
 use domain::models::PatchedUser;
-use infrastructure::DbConn;
-use rocket::response::status::{Created, NotFound, Unauthorized};
-use rocket::serde::json::Json;
-use rocket::{get, patch, post, put};
 use shared::request_models::{LoginCredentials, RegisterUser};
 use shared::response_models::UserResponse;
-
-#[post("/login", format = "application/json", data = "<credentials>")]
-pub async fn login_user_handler(
-    conn: DbConn,
-    credentials: Json<LoginCredentials>,
-) -> Result<std::string::String, Unauthorized<String>> {
-    conn.run(move |c| login::login_user(c, credentials)).await
-}
+use sqlx::postgres::PgPool;
 
 #[post("/register", format = "application/json", data = "<user>")]
 pub async fn register_user_handler(conn: DbConn, user: Json<RegisterUser>) -> Created<String> {

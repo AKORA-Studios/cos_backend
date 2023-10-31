@@ -24,74 +24,66 @@ fn unauthorized<T>() -> OpResult<T, String> {
     ))
 }
 
-pub async fn login_user(
-    db_conn: &PgPool,
+pub async fn fetch_user_with_credentials(
+    conn: &PgPool,
     credentials: LoginCredentials,
-) -> OpResult<String, String> {
-    let creds = credentials;
-
-    let (password, result) = match creds {
+) -> (String, Result<User, sqlx::Error>) {
+    match credentials {
         LoginCredentials::UsernameCredentials { username, password } => (
             password,
             sqlx::query_as::<_, User>(r#"SELECT * FROM "users" WHERE username = ?"#)
                 .bind(username)
-                .fetch_one(db_conn)
+                .fetch_one(conn)
                 .await,
         ),
         LoginCredentials::EmailCredentials { email, password } => (
             password,
             sqlx::query_as::<_, User>(r#"SELECT * FROM "users" WHERE email = ?"#)
                 .bind(email)
-                .fetch_one(db_conn)
+                .fetch_one(conn)
                 .await,
         ),
-    };
+    }
+}
 
-    match result {
-        Ok(user) => match PasswordHash::new(&user.password_hash) {
-            Ok(parsed_hash) => {
-                match Argon2::default().verify_password(password.as_bytes(), &parsed_hash) {
-                    Ok(_) => {
-                        let issued_at = SystemTime::now();
-                        let expires_at = SystemTime::now() + Duration::from_secs(60 * 60 * 8);
+pub async fn authorize_user(password: &str, user: User) -> OpResult<String, String> {
+    match PasswordHash::new(&user.password_hash) {
+        Ok(parsed_hash) => {
+            match Argon2::default().verify_password(password.as_bytes(), &parsed_hash) {
+                Ok(_) => {
+                    let issued_at = SystemTime::now();
+                    let expires_at = SystemTime::now() + Duration::from_secs(60 * 60 * 8);
 
-                        let iat = issued_at
-                            .duration_since(SystemTime::UNIX_EPOCH)
-                            .unwrap()
-                            .as_secs();
+                    let iat = issued_at
+                        .duration_since(SystemTime::UNIX_EPOCH)
+                        .unwrap()
+                        .as_secs();
 
-                        let exp = expires_at
-                            .duration_since(SystemTime::UNIX_EPOCH)
-                            .unwrap()
-                            .as_secs();
+                    let exp = expires_at
+                        .duration_since(SystemTime::UNIX_EPOCH)
+                        .unwrap()
+                        .as_secs();
 
-                        let claims = JWTClaims {
-                            user_id: user.id,
-                            username: user.username,
-                            nickname: user.nickname,
-                            exp: exp as usize,
-                            iat: iat as usize,
-                        };
+                    let claims = JWTClaims {
+                        user_id: user.id,
+                        username: user.username,
+                        nickname: user.nickname,
+                        exp: exp as usize,
+                        iat: iat as usize,
+                    };
 
-                        match auth::create_token(claims) {
-                            Ok(token) => {
-                                let response = TokenRespone { token };
+                    match auth::create_token(claims) {
+                        Ok(token) => {
+                            let response = TokenRespone { token };
 
-                                Ok(OpSuc::Success(serde_json::to_string(&response).unwrap()))
-                            }
-                            Err(e) => panic!("JWT encoding error - {}", e),
+                            Ok(OpSuc::Success(serde_json::to_string(&response).unwrap()))
                         }
+                        Err(e) => panic!("JWT encoding error - {}", e),
                     }
-                    Err(_e) => unauthorized(),
                 }
+                Err(_e) => unauthorized(),
             }
-            Err(e) => panic!("Password hashing error - {}", e),
-        },
-        Err(err) => match err {
-            // DieselError::NotFound => unauthorized(),
-            _ => {
-                panic!("Database error - {}", err);
-            }
-        },
+        }
+        Err(e) => panic!("Password hashing error - {}", e),
     }
 }

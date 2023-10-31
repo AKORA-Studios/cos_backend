@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 
@@ -30,6 +32,12 @@ pub struct JWTClaims {
     pub nickname: String,
     pub exp: usize, // Required (validate_exp defaults to true in validation). Expiration time (as UTC timestamp)
     pub iat: usize,
+}
+
+impl Display for JWTClaims {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Id: {}\nName: {}", self.user_id, self.username)
+    }
 }
 
 pub fn create_token(claims: JWTClaims) -> Result<String, jsonwebtoken::errors::Error> {
