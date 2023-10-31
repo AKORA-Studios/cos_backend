@@ -1,50 +1,49 @@
 // application/src/user/create.rs
-
-use diesel::prelude::*;
-use diesel::result::Error as DieselError;
 use domain::models::User;
-
-use rocket::response::status::Unauthorized;
-use rocket::serde::json::Json;
 
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use shared::{
     request_models::LoginCredentials,
     response_models::{ErrorMessageResponse, TokenRespone},
 };
+use sqlx::PgPool;
 use std::time::{Duration, SystemTime};
 
 use crate::auth::{self, JWTClaims};
+use crate::OpSuc;
 
-fn unauthorized<T>() -> Result<T, Unauthorized<String>> {
+use crate::{OpErr, OpResult};
+
+fn unauthorized<T>() -> OpResult<T, String> {
     let response = ErrorMessageResponse {
         message: format!("Invalid password or username"),
     };
 
-    Err(Unauthorized(Some(
+    Err(OpErr::Unauthorized(
         serde_json::to_string(&response).unwrap(),
-    )))
+    ))
 }
 
-pub fn login_user(
-    db_conn: &mut PgConnection,
-    credentials: Json<LoginCredentials>,
-) -> Result<String, Unauthorized<String>> {
-    use domain::schema::users;
-    let creds = credentials.into_inner();
+pub async fn login_user(
+    db_conn: &PgPool,
+    credentials: LoginCredentials,
+) -> OpResult<String, String> {
+    let creds = credentials;
 
     let (password, result) = match creds {
         LoginCredentials::UsernameCredentials { username, password } => (
             password,
-            users::table
-                .filter(users::username.eq(username))
-                .first::<User>(db_conn),
+            sqlx::query_as::<_, User>(r#"SELECT * FROM "users" WHERE username = ?"#)
+                .bind(username)
+                .fetch_one(db_conn)
+                .await,
         ),
         LoginCredentials::EmailCredentials { email, password } => (
             password,
-            users::table
-                .filter(users::email.eq(email))
-                .first::<User>(db_conn),
+            sqlx::query_as::<_, User>(r#"SELECT * FROM "users" WHERE email = ?"#)
+                .bind(email)
+                .fetch_one(db_conn)
+                .await,
         ),
     };
 
@@ -78,7 +77,7 @@ pub fn login_user(
                             Ok(token) => {
                                 let response = TokenRespone { token };
 
-                                Ok(serde_json::to_string(&response).unwrap())
+                                Ok(OpSuc::Success(serde_json::to_string(&response).unwrap()))
                             }
                             Err(e) => panic!("JWT encoding error - {}", e),
                         }
@@ -89,7 +88,7 @@ pub fn login_user(
             Err(e) => panic!("Password hashing error - {}", e),
         },
         Err(err) => match err {
-            DieselError::NotFound => unauthorized(),
+            // DieselError::NotFound => unauthorized(),
             _ => {
                 panic!("Database error - {}", err);
             }

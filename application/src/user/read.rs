@@ -1,18 +1,17 @@
 // application/src/user/read.rs
 
-use diesel::prelude::*;
 use domain::models::{DisplayUser, DISPLAY_USER_COLUMNS};
-use rocket::response::status::NotFound;
+use sqlx::PgPool;
 
-use crate::util::map_diesel_result;
+use crate::{map_sqlx_result, OpResult, OpSuc};
 
-pub fn view_user(conn: &mut PgConnection, user_id: i32) -> Result<DisplayUser, NotFound<String>> {
-    use domain::schema::users::dsl::*;
+pub async fn view_user(conn: &PgPool, user_id: i32) -> OpResult<DisplayUser, sqlx::Error> {
+    let sql = format!("SELECT {} FROM users WHERE id = ?", DISPLAY_USER_COLUMNS);
 
-    let result = users
-        .select(DISPLAY_USER_COLUMNS)
-        .find(user_id)
-        .first::<DisplayUser>(conn);
+    let result = sqlx::query_as::<_, DisplayUser>(&sql)
+        .bind(user_id)
+        .fetch_one(conn)
+        .await;
 
-    map_diesel_result(result)
+    map_sqlx_result(result.map(|v| OpSuc::Read(v)))
 }

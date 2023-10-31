@@ -1,10 +1,8 @@
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
-use rocket::http::Status;
-use rocket::serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 /// Our claims struct, it needs to derive `Serialize` and/or `Deserialize`
 #[derive(Debug, Serialize, Deserialize)]
-#[serde(crate = "rocket::serde")]
 pub struct JWTClaims {
     pub user_id: i32,
     pub username: String,
@@ -36,6 +34,7 @@ pub fn verify_token(token: &str) -> Result<JWTClaims, jsonwebtoken::errors::Erro
     }
 }
 
+/*
 use rocket::request::{FromRequest, Outcome, Request};
 
 #[derive(Debug)]
@@ -67,3 +66,4 @@ impl<'r> FromRequest<'r> for JWTClaims {
         }
     }
 }
+ */

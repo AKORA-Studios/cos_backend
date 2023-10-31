@@ -1,8 +1,7 @@
-use shared::response_models::ErrorMessageResponse;
+pub type OperationResult<V, E> = Result<OperationSuccess<V>, OperationError<E>>;
 
-pub type OperationResult<V, E> = Result<OperationSucces<V>, OperationError<E>>;
-
-pub enum OperationSucces<V> {
+pub enum OperationSuccess<V> {
+    Success(V),
     Created(V),
     Updated(V),
     Deleted(V),
@@ -10,9 +9,18 @@ pub enum OperationSucces<V> {
 }
 pub enum OperationError<E> {
     InternalError(E),
+    Unauthorized(E),
     NotFound(E),
+    Any,
 }
 
+pub fn map_sqlx_result<T>(
+    result: Result<OperationSuccess<T>, sqlx::Error>,
+) -> OperationResult<T, sqlx::Error> {
+    result.map_err(|e| OperationError::InternalError(e))
+}
+
+/*
 pub fn map_diesel_result<T>(result: Result<T, DieselError>) -> Result<T, NotFound<String>> {
     match result {
         Ok(post) => Ok(post),
@@ -29,3 +37,4 @@ pub fn map_diesel_result<T>(result: Result<T, DieselError>) -> Result<T, NotFoun
         },
     }
 }
+*/

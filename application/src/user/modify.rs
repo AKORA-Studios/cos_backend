@@ -1,26 +1,35 @@
 // application/src/user/read.rs
 
-use diesel::prelude::*;
 use domain::models::{DisplayUser, PatchedUser, DISPLAY_USER_COLUMNS};
 
-use rocket::{response::status::NotFound, serde::json::Json};
+use sqlx::{PgPool, Postgres, QueryBuilder};
 
-use crate::util::map_diesel_result;
+use crate::{map_sqlx_result, OpErr, OpResult, OpSuc};
 
-pub fn modify_user(
-    conn: &mut PgConnection,
+pub async fn modify_user(
+    conn: &PgPool,
     user_id: i32,
-    patch_data: Json<PatchedUser>,
-) -> Result<DisplayUser, NotFound<String>> {
-    use domain::schema::users::dsl::*;
+    patch_data: PatchedUser,
+) -> OpResult<DisplayUser, sqlx::Error> {
+    let mut query: QueryBuilder<Postgres> = QueryBuilder::new(r#"UPDATE "users" SET "#);
 
-    let patch_data = patch_data.into_inner();
+    //    let sep = query.separated(", ");
 
-    let statement = diesel::update(users.filter(id.eq(user_id))).set(patch_data);
+    if patch_data.nickname.is_some() {
+        query
+            .push("nickname")
+            .push("=")
+            .push_bind(patch_data.nickname);
+    } else {
+        return Err(OpErr::Any);
+    }
 
-    let result = statement
-        .returning(DISPLAY_USER_COLUMNS)
-        .get_result::<DisplayUser>(conn);
+    query.push(" WHERE id = ").push_bind(user_id);
+    query.push(format!(" RETURNING {}", DISPLAY_USER_COLUMNS));
 
-    map_diesel_result(result)
+    let finished_query = query.build_query_as::<DisplayUser>();
+
+    let result = finished_query.fetch_one(conn).await;
+
+    map_sqlx_result(result.map(|v| OpSuc::Updated(v)))
 }
