@@ -1,7 +1,7 @@
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [workspace]
 members = ["api", "application", "domain", "infrastructure", "shared"]
-
+resolver = "2"
 
 [workspace.dependencies]
 sqlx = { version = "0.7", features = ["runtime-tokio", "postgres", "migrate"] }
@@ -14,5 +14,5 @@ tower = "0.4.13"
 serde = { version = "1.0.147" }
 serde_json = "1.0.88"
 
-[workspace.profile.dev.package.sqlx-macros]
+[profile.dev.package.sqlx-macros]
 opt-level = 3

@@ -1,29 +1,30 @@
 // application/src/event/create.rs
 
-use diesel::prelude::*;
 use domain::models::{Event, NewEvent};
 
-use rocket::response::status::Created;
-use rocket::serde::json::Json;
+use crate::{OpErr, OpResult};
 use shared::response_models::EventRespone;
+use sqlx::{self, PgPool};
 
-pub fn create_event(db_conn: &mut PgConnection, event: Json<NewEvent>) -> Created<String> {
-    use domain::schema::events::dsl::*;
-
-    let event = event.into_inner();
-
-    match diesel::insert_into(events)
-        .values(&event)
-        .get_result::<Event>(db_conn)
+pub async fn create_event(db_conn: &PgPool, event: NewEvent) -> OpResult<String, _> {
+    match sqlx::query_as::<Event>(
+        r#"
+        INSERT INTO "events" (name, start_time, end_time, lat, lon)
+        values ($1, $2, $3, $4, $5)
+    "#,
+    )
+    .bind(event.name)
+    .bind(event.start_time)
+    .bind(event.end_time)
+    .bind(event.lat)
+    .bind(event.lon)
+    .execute(db_conn)
+    .await
     {
         Ok(event) => {
             let response = EventRespone { event };
-            Created::new("").tagged_body(serde_json::to_string(&response).unwrap())
+            Ok(serde_json::to_string(&response).unwrap())
         }
-        Err(err) => match err {
-            _ => {
-                panic!("Database error - {}", err);
-            }
-        },
+        Err(err) => OpErr::InternalError(err),
     }
 }
