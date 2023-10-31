@@ -1,4 +1,4 @@
-use std::time::SystemTime;
+use chrono::{DateTime, Local};
 
 use serde::Serialize;
 
@@ -12,7 +12,7 @@ pub struct JoinedPostWithUser {
     pub photographer_id: Option<i32>,
     pub lat: Option<f64>,
     pub lon: Option<f64>,
-    pub created_at: SystemTime,
+    pub created_at: DateTime<Local>,
 
     pub username: String,
     pub nickname: String,
@@ -52,7 +52,7 @@ pub struct FullPost {
     pub photographer_id: Option<i32>,
     pub lat: Option<f64>,
     pub lon: Option<f64>,
-    pub created_at: SystemTime,
+    pub created_at: DateTime<Local>,
 
     pub downloads: i64,
     pub likes: i64,

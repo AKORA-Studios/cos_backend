@@ -1,7 +1,7 @@
 // domain/src/models.rs
+use chrono::{DateTime, Local};
 use serde::{Deserialize, Serialize};
 use std::cmp::{Eq, PartialEq};
-use std::time::SystemTime;
 
 use crate::sql_types::ContentType;
 
@@ -18,7 +18,7 @@ pub struct Message {
     pub from_id: i32,
     /// User ID of message receiver
     pub to_id: i32,
-    pub created_at: SystemTime,
+    pub created_at: DateTime<Local>,
 }
 
 // Queryable will generate the code needed to load the struct from an SQL statement
@@ -27,7 +27,7 @@ pub struct Attachment {
     pub id: i32,
     pub url: String,
     pub content_type: ContentType,
-    pub created_at: SystemTime,
+    pub created_at: DateTime<Local>,
 }
 
 #[derive(Deserialize)]
@@ -43,5 +43,5 @@ pub struct InsertableMessage {
 pub struct InsertableAttachment {
     pub url: String,
     pub content_type: ContentType,
-    pub created_at: SystemTime,
+    pub created_at: DateTime<Local>,
 }

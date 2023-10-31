@@ -1,7 +1,7 @@
 // domain/src/models.rs
-use serde::Serialize;
+use chrono::{DateTime, Local};
+use serde::{Deserialize, Serialize};
 use std::cmp::{Eq, PartialEq};
-use std::time::SystemTime;
 
 // Queryable will generate the code needed to load the struct from an SQL statement
 #[derive(sqlx::FromRow, Serialize, PartialEq, Eq, Debug)]
@@ -12,7 +12,7 @@ pub struct User {
     pub password_hash: String,
     pub email: String,
     //https://stackoverflow.com/questions/38676229/timestamp-in-rusts-diesel-library-with-postgres
-    pub created_at: SystemTime,
+    pub created_at: DateTime<Local>,
 
     pub twitter_username: Option<String>,
     pub instagram_username: Option<String>,
@@ -45,7 +45,7 @@ pub struct DisplayUser {
     pub nickname: String,
 
     //https://stackoverflow.com/questions/38676229/timestamp-in-rusts-diesel-library-with-postgres
-    pub created_at: SystemTime,
+    pub created_at: DateTime<Local>,
     pub twitter_username: Option<String>,
     pub instagram_username: Option<String>,
     pub tiktok_username: Option<String>,
@@ -54,6 +54,20 @@ pub struct DisplayUser {
     pub youtube_username: Option<String>,
     pub myanimelist_username: Option<String>,
 }
+pub const DISPLAY_USER_COLUMNS: &'static str = r#"
+    id,
+    username,
+    nickname,
+    created_at,
+    nickname,
+    twitter_username,
+    instagram_username,
+    tiktok_username,
+    onlyfans_username,
+    snapchat_username,
+    youtube_username,
+    myanimelist_username
+"#;
 
 /*
 
@@ -85,12 +99,10 @@ pub const DISPLAY_USER_COLUMNS: DisplayUserColumns = (
     users::myanimelist_username,
 );
 
-#[derive(AsChangeset, Deserialize)]
-#[serde(crate = "rocket::serde")]
-#[diesel(table_name = users)]
-#[diesel(treat_none_as_null = true)]
+*/
+#[derive(Deserialize)]
 pub struct PatchedUser {
-    pub nickname: String,
+    pub nickname: Option<String>,
 
     pub twitter_username: Option<String>,
     pub instagram_username: Option<String>,
@@ -100,4 +112,3 @@ pub struct PatchedUser {
     pub youtube_username: Option<String>,
     pub myanimelist_username: Option<String>,
 }
-*/

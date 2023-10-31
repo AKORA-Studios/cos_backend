@@ -1,6 +1,6 @@
 // domain/src/models.rs
+use chrono::{DateTime, Local};
 use serde::Serialize;
-use std::time::SystemTime;
 
 // https://docs.diesel.rs/diesel/associations/index.html#traits
 // Queryable will generate the code needed to load the struct from an SQL statement
@@ -15,7 +15,7 @@ pub struct Post {
     pub lat: Option<f64>,
     pub lon: Option<f64>,
     //https://stackoverflow.com/questions/38676229/timestamp-in-rusts-diesel-library-with-postgres
-    pub created_at: SystemTime,
+    pub created_at: DateTime<Local>,
 }
 
 pub struct InsertablePost {
