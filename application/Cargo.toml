@@ -18,3 +18,4 @@ serde_json = { workspace = true }
 argon2 = "0.4.1"
 jsonwebtoken = { version = "8", default-features = false }
 rand_core = { version = "0.6", features = ["std"] }
+once_cell = "1.18.0"

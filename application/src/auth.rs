@@ -1,6 +1,27 @@
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 
+use once_cell::sync::Lazy;
+
+static KEYS: Lazy<Keys> = Lazy::new(|| {
+    let secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+    Keys::new(secret.as_bytes())
+});
+
+struct Keys {
+    encoding: EncodingKey,
+    decoding: DecodingKey,
+}
+
+impl Keys {
+    fn new(secret: &[u8]) -> Self {
+        Self {
+            encoding: EncodingKey::from_secret(secret),
+            decoding: DecodingKey::from_secret(secret),
+        }
+    }
+}
+
 /// Our claims struct, it needs to derive `Serialize` and/or `Deserialize`
 #[derive(Debug, Serialize, Deserialize)]
 pub struct JWTClaims {
@@ -11,59 +32,13 @@ pub struct JWTClaims {
     pub iat: usize,
 }
 
-fn secret() -> String {
-    std::env::var("JWT_SECRET").expect("JWT_SECRET must be set.")
-}
-
 pub fn create_token(claims: JWTClaims) -> Result<String, jsonwebtoken::errors::Error> {
-    encode(
-        &Header::default(),
-        &claims,
-        &EncodingKey::from_secret(secret().as_bytes()),
-    )
+    encode(&Header::default(), &claims, &KEYS.encoding)
 }
 
 pub fn verify_token(token: &str) -> Result<JWTClaims, jsonwebtoken::errors::Error> {
-    match decode::<JWTClaims>(
-        token,
-        &DecodingKey::from_secret(secret().as_bytes()),
-        &Validation::new(Algorithm::HS256),
-    ) {
+    match decode::<JWTClaims>(token, &KEYS.decoding, &Validation::new(Algorithm::HS256)) {
         Ok(claims) => Ok(claims.claims),
         Err(e) => Err(e),
     }
 }
-
-/*
-use rocket::request::{FromRequest, Outcome, Request};
-
-#[derive(Debug)]
-pub enum AuthError {
-    JWTError(jsonwebtoken::errors::Error),
-    MissingToken,
-}
-
-#[rocket::async_trait]
-impl<'r> FromRequest<'r> for JWTClaims {
-    type Error = AuthError;
-
-    async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
-        let token = req.headers().get_one("Authorization");
-        match token {
-            Some(token) => {
-                let token = if token.starts_with("Bearer ") {
-                    token.replace("Bearer ", "")
-                } else {
-                    token.to_owned()
-                };
-
-                match verify_token(&token) {
-                    Ok(claim) => Outcome::Success(claim),
-                    Err(e) => Outcome::Failure((Status::Unauthorized, AuthError::JWTError(e))),
-                }
-            }
-            None => Outcome::Failure((Status::Unauthorized, AuthError::MissingToken)),
-        }
-    }
-}
- */
