@@ -1,7 +1,6 @@
-use rocket::serde::Deserialize;
+use serde::Deserialize;
 
 #[derive(Deserialize)]
-#[serde(crate = "rocket::serde")]
 pub struct RegisterUser {
     pub username: String,
     pub nickname: String,
@@ -18,7 +17,6 @@ pub struct RegisterUser {
 }
 
 #[derive(Deserialize)]
-#[serde(crate = "rocket::serde")]
 #[serde(untagged)]
 pub enum LoginCredentials {
     UsernameCredentials { username: String, password: String },
@@ -26,7 +24,6 @@ pub enum LoginCredentials {
 }
 
 #[derive(Deserialize)]
-#[serde(crate = "rocket::serde")]
 pub struct NewMessage {
     pub content: String,
     pub attachment_id: Option<i32>,
@@ -34,14 +31,12 @@ pub struct NewMessage {
 }
 
 #[derive(Deserialize)]
-#[serde(crate = "rocket::serde")]
 pub struct NewComment {
     pub content: String,
     pub reply_to: Option<i32>,
 }
 
 #[derive(Deserialize)]
-#[serde(crate = "rocket::serde")]
 pub struct NewPost {
     pub caption: Option<String>,
     pub description: Option<String>,
