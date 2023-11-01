@@ -1,5 +1,5 @@
 -- up.sql
-CREATE TABLE IF NOT EXISTS events (
+CREATE TABLE events (
     id          SERIAL PRIMARY KEY,
     name        VARCHAR(256) NOT NULL,
     start_time  TIMESTAMP NOT NULL, -- !TODO timezones

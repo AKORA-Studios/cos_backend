@@ -1,8 +1,8 @@
 -- up.sql
 
-CREATE TYPE IF NOT EXISTS content_type AS ENUM ('image', 'video', 'audio');
+CREATE TYPE content_type AS ENUM ('image', 'video', 'audio');
 
-CREATE TABLE IF NOT EXISTS attachments (
+CREATE TABLE attachments (
     "id"              SERIAL PRIMARY KEY,
     
     "url"             VARCHAR(1024) NOT NULL,
@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS attachments (
 );
 
 
-CREATE TABLE IF NOT EXISTS messages (
+CREATE TABLE messages (
     id              SERIAL PRIMARY KEY,
     content         VARCHAR(1024) NOT NULL,
 
@@ -25,5 +25,5 @@ CREATE TABLE IF NOT EXISTS messages (
     created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS message_author ON messages (from_id);
-CREATE INDEX IF NOT EXISTS message_receiver ON messages (to_id);
+CREATE INDEX message_author ON messages (from_id);
+CREATE INDEX message_receiver ON messages (to_id);
