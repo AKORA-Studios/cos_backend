@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 sqlx = { workspace = true }
+futures-core = "0.3.29"
