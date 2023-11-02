@@ -44,17 +44,17 @@ impl CustomSource {
 
             // Check for dir with possible children
             if std::fs::metadata(&entry_path)?.is_dir() {
-                let new_parent = format!("{}_{}", parent, file_name);
+                let new_parent = format!("{}{}_", parent, file_name);
                 let mut children = CustomSource::resolve_child(&entry.path(), &new_parent)?;
                 migrations.append(&mut children);
+                continue;
             }
 
-            let full_name = format!("{parent}_{file_name}");
+            let full_name = format!("{parent}{file_name}").replace("-", "_");
             let parts = full_name.splitn(5, '_').collect::<Vec<_>>();
 
             if parts.len() != 5 || !parts[4].ends_with(".sql") {
                 // not correct format
-                println!("No correct format");
                 continue;
             }
 
@@ -62,7 +62,7 @@ impl CustomSource {
             {
                 (*y, *m, *d, *v, *desc)
             } else {
-                println!("EEE {:?}", &parts);
+                // This should never happen
                 continue;
             };
 
@@ -105,15 +105,12 @@ impl MigrationSource<'static> for CustomSource {
             // ensure that we are sorted by `VERSION ASC`
             migrations.sort_by_key(|m| m.version);
 
-            println!("migrations {:?}", &migrations);
-
             Ok(migrations)
         })
     }
 }
 
-// pool: A
-pub async fn run_migrations<'a, A>() -> Result<(), MigrateError>
+pub async fn run_migrations<'a, A>(pool: A) -> Result<(), MigrateError>
 where
     A: Acquire<'a>,
     <A::Connection as Deref>::Target: Migrate,
@@ -121,8 +118,17 @@ where
     let migration_path_str = concat!(env!("CARGO_MANIFEST_DIR"), "/migrations");
     let path = CustomSource::new(migration_path_str);
 
-    let _migrator = Migrator::new(path).await?;
+    let migrator = Migrator::new(path).await?;
 
-    //migrator.run(pool).await
-    Ok(())
+    migrator.run(pool).await
 }
+
+/*
+/// For testing purposes only
+pub async fn build_migrator() -> Result<Migrator, MigrateError> {
+    let migration_path_str = concat!(env!("CARGO_MANIFEST_DIR"), "/migrations");
+    let path = CustomSource::new(migration_path_str);
+
+    Migrator::new(path).await
+}
+*/
