@@ -18,8 +18,6 @@ use serde_json::json;
 use shared::{request_models::LoginCredentials, response_models::TokenRespone};
 use sqlx::PgPool;
 
-use crate::util::WrappedRes;
-
 #[derive(Debug, Serialize)]
 pub struct AuthBody {
     access_token: String,
@@ -52,21 +50,14 @@ impl AuthBody {
 pub async fn login_user_handler(
     State(pool): State<PgPool>,
     Json(credentials): Json<LoginCredentials>,
-) -> WrappedRes<TokenRespone, String> {
+) -> OpResult<TokenRespone, String> {
     let (password, user) = login::fetch_user_with_credentials(&pool, credentials).await;
 
     if let OpSuc::Read(user) = user? {
-        Ok(login::authorize_user(&password, user).await?)
+        login::authorize_user(&password, user).await
     } else {
         unreachable!("Invalid operation")
     }
-}
-
-pub async fn login_user_handler_2(
-    state: State<PgPool>,
-    json: Json<LoginCredentials>,
-) -> WrappedRes<TokenRespone, String> {
-    WrappedRes(login_user_handler(state, json).await)
 }
 
 async fn protected(claims: JWTClaims) -> Result<String, AuthError> {

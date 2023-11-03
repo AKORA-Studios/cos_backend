@@ -31,21 +31,33 @@ pub fn map_sqlx_result<T: Serialize>(
     })
 }
 
-/*
-pub fn map_diesel_result<T>(result: Result<T, DieselError>) -> Result<T, NotFound<String>> {
-    match result {
-        Ok(post) => Ok(post),
-        Err(err) => match err {
-            DieselError::NotFound => {
-                let response = ErrorMessageResponse {
-                    message: format!("Not found"),
-                };
-                return Err(NotFound(serde_json::to_string(&response).unwrap()));
-            }
-            _ => {
-                panic!("Database error - {}", err);
-            }
-        },
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Response};
+use axum::Json;
+
+impl<V: Serialize> IntoResponse for OpSuc<V> {
+    fn into_response(self) -> Response {
+        let (status, body) = match self {
+            OpSuc::Created(v) => (StatusCode::CREATED, v),
+            OpSuc::Success(v) => (StatusCode::OK, v),
+            OpSuc::Deleted(v) => (StatusCode::NO_CONTENT, v),
+            OpSuc::Read(v) => (StatusCode::OK, v),
+            OpSuc::Updated(v) => (StatusCode::OK, v),
+        };
+
+        (status, Json(body)).into_response()
     }
 }
-*/
+
+impl<E: Serialize> IntoResponse for OpErr<E> {
+    fn into_response(self) -> Response {
+        let (status, body) = match self {
+            OpErr::Any(v) => (StatusCode::NOT_FOUND, v),
+            OpErr::InternalError(v) => (StatusCode::NOT_FOUND, v),
+            OpErr::Unauthorized(v) => (StatusCode::NOT_FOUND, v),
+            OpErr::NotFound(v) => (StatusCode::NOT_FOUND, v),
+        };
+
+        (status, Json(body)).into_response()
+    }
+}

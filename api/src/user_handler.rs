@@ -2,25 +2,31 @@
 
 use application::auth::JWTClaims;
 use application::user::{interact, login, modify, read, register};
-use axum::extract::State;
+use application::{OpResult, OpSuc};
+use axum::extract::{Path, State};
 use axum::Json;
-use domain::models::PatchedUser;
+use domain::models::{DisplayUser, PatchedUser};
 use shared::request_models::{LoginCredentials, RegisterUser};
 use shared::response_models::UserResponse;
 use sqlx::postgres::PgPool;
 
-#[post("/register", format = "application/json", data = "<user>")]
-pub async fn register_user_handler(conn: DbConn, user: Json<RegisterUser>) -> Created<String> {
-    conn.run(move |c| register::register_user(c, user)).await
+/// POST /register - data = <user>
+pub async fn register_user_handler(
+    State(pool): State<PgPool>,
+    Json(user): Json<RegisterUser>,
+) -> OpResult<UserResponse, String> {
+    register::register_user(&pool, user).await
 }
 
-#[get("/users/<user_id>")]
-pub async fn view_user_handler(conn: DbConn, user_id: i32) -> Result<String, NotFound<String>> {
-    let fut = conn.run(move |c| read::view_user(c, user_id));
-    let user = fut.await?;
+/// GET /users/:user_id
+pub async fn view_user_handler(
+    State(pool): State<PgPool>,
+    Path(user_id): Path<i32>,
+) -> OpResult<UserResponse, String> {
+    let user = read::view_user(&pool, user_id).await?;
     let response = UserResponse { user };
 
-    Ok(serde_json::to_string(&response).unwrap())
+    Ok(OpSuc::Read(response))
 }
 
 #[get("/users/me")]
