@@ -5,7 +5,7 @@ CREATE TABLE users (
     "nickname"             VARCHAR(256) NOT NULL,
     "password_hash"        VARCHAR(512) NOT NULL, -- !TODO figure out hash size 
     "email"                VARCHAR(320) NOT NULL UNIQUE, -- max valid email length
-    "created_at"           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "created_at"           TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     -- !TODO more socials
     "twitter_username"     VARCHAR(256),

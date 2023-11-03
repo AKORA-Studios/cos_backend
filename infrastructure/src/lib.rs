@@ -120,6 +120,10 @@ where
 
     let migrator = Migrator::new(path).await?;
 
+    // Revert all migrations
+    // migrator.undo(pool, 0).await
+
+    // Run all migrations
     migrator.run(pool).await
 }
 

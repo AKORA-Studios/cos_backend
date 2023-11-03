@@ -8,7 +8,7 @@ CREATE TABLE attachments (
     "url"             VARCHAR(1024) NOT NULL,
     "content_type"    content_type NOT NULL,
 
-    "created_at"      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    "created_at"      TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 
@@ -22,7 +22,7 @@ CREATE TABLE messages (
     from_id         INT NOT NULL REFERENCES users(id),
     to_id           INT NOT NULL REFERENCES users(id),
 
-    created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX message_author ON messages (from_id);

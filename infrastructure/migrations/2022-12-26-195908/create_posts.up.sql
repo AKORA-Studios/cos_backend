@@ -13,7 +13,7 @@ CREATE TABLE posts (
     "lat"             DOUBLE PRECISION,
     "lon"             DOUBLE PRECISION,
     
-    "created_at"      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    "created_at"      TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE post_depicted_people (
