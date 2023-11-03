@@ -2,6 +2,7 @@
 use domain::models::User;
 
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
+use serde::Serialize;
 use shared::{
     request_models::LoginCredentials,
     response_models::{ErrorMessageResponse, TokenRespone},
@@ -14,7 +15,7 @@ use crate::OpSuc;
 
 use crate::{OpErr, OpResult};
 
-fn unauthorized<T>() -> OpResult<T, String> {
+fn unauthorized<T: Serialize>() -> OpResult<T, String> {
     let response = ErrorMessageResponse {
         message: format!("Invalid password or username"),
     };

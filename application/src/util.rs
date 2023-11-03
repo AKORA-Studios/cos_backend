@@ -1,23 +1,35 @@
-pub type OperationResult<V, E> = Result<OperationSuccess<V>, OperationError<E>>;
+use serde::Serialize;
 
-pub enum OperationSuccess<V> {
+type Serializeable<T: Serialize> = T;
+pub type OpResult<V: Serialize, E: Serialize> = Result<OperationSuccess<V>, OperationError<E>>;
+type OperationResult<V: Serialize, E: Serialize> = OpResult<V, E>;
+
+/// OperationSuccess
+pub enum OpSuc<V: Serialize> {
     Success(V),
     Created(V),
     Updated(V),
     Deleted(V),
     Read(V),
 }
-pub enum OperationError<E> {
+type OperationSuccess<V: Serialize> = OpSuc<V>;
+
+/// OperationError
+pub enum OpErr<E: Serialize> {
     InternalError(E),
     Unauthorized(E),
-    NotFound(E),
+    NotFound,
     Any,
 }
+type OperationError<V: Serialize> = OpErr<V>;
 
-pub fn map_sqlx_result<T>(
+pub fn map_sqlx_result<T: Serialize>(
     result: Result<OperationSuccess<T>, sqlx::Error>,
-) -> OperationResult<T, sqlx::Error> {
-    result.map_err(|e| OperationError::InternalError(e))
+) -> OperationResult<T, String> {
+    result.map_err(|e| match e {
+        sqlx::Error::RowNotFound => OperationError::NotFound,
+        _ => OperationError::InternalError(e.to_string()),
+    })
 }
 
 /*

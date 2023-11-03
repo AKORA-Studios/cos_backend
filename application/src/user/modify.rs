@@ -10,7 +10,7 @@ pub async fn modify_user(
     conn: &PgPool,
     user_id: i32,
     patch_data: PatchedUser,
-) -> OpResult<DisplayUser, sqlx::Error> {
+) -> OpResult<DisplayUser, String> {
     let mut query: QueryBuilder<Postgres> = QueryBuilder::new(r#"UPDATE "users" SET "#);
 
     //    let sep = query.separated(", ");
