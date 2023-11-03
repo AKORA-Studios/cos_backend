@@ -34,14 +34,14 @@ pub async fn fetch_user_with_credentials(
     let (password, user) = match credentials {
         LoginCredentials::UsernameCredentials { username, password } => (
             password,
-            sqlx::query_as::<_, User>(r#"SELECT * FROM "users" WHERE username = ?"#)
+            sqlx::query_as::<_, User>(r#"SELECT * FROM "users" WHERE username = $1"#)
                 .bind(username)
                 .fetch_one(conn)
                 .await,
         ),
         LoginCredentials::EmailCredentials { email, password } => (
             password,
-            sqlx::query_as::<_, User>(r#"SELECT * FROM "users" WHERE email = ?"#)
+            sqlx::query_as::<_, User>(r#"SELECT * FROM "users" WHERE email = $1"#)
                 .bind(email)
                 .fetch_one(conn)
                 .await,

@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct RegisterUser {
     pub username: String,
     pub nickname: String,
@@ -16,27 +16,27 @@ pub struct RegisterUser {
     pub myanimelist_username: Option<String>,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 #[serde(untagged)]
 pub enum LoginCredentials {
     UsernameCredentials { username: String, password: String },
     EmailCredentials { email: String, password: String },
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct NewMessage {
     pub content: String,
     pub attachment_id: Option<i32>,
     pub reply_to: Option<i32>,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct NewComment {
     pub content: String,
     pub reply_to: Option<i32>,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct NewPost {
     pub caption: Option<String>,
     pub description: Option<String>,

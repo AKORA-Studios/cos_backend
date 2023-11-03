@@ -1,3 +1,4 @@
+use api::auth::login_user_handler;
 // api/src/bin/main.rs
 use dotenvy::dotenv;
 use std::{env, time::Duration};
@@ -7,6 +8,7 @@ use tokio;
 use std::fs;
 
 use axum::{
+    http::StatusCode,
     routing::{get, patch, post},
     Router,
 };
@@ -49,15 +51,17 @@ async fn main() {
 
     // build our application with a route
     let app = Router::new()
-        .route("/", get(api::user_handler::status))
+        .route("/", get(status_handler))
         .nest(
             "/api",
             Router::new()
+                .route("/login", post(login_user_handler))
                 .route("/register", post(register_user_handler))
                 .route("/users/:user_id", get(view_user_handler))
                 .route("/users/me", get(view_me_handler))
                 .route("/users/me", patch(patch_me_handler)),
         )
+        .fallback(fallback_handler)
         .with_state(pool);
 
     // User handlers
@@ -71,6 +75,17 @@ async fn main() {
         .serve(app.into_make_service())
         .await
         .unwrap();
+}
+
+async fn status_handler() -> StatusCode {
+    StatusCode::OK
+}
+
+async fn fallback_handler() -> (StatusCode, String) {
+    (
+        StatusCode::NOT_FOUND,
+        "This route, doesn't exist".to_owned(),
+    )
 }
 
 /*

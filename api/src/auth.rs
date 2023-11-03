@@ -3,7 +3,7 @@ use std::ops::Deref;
 use application::{
     auth::{verify_token, JWTClaims},
     user::login,
-    TaskResult,
+    OpResult,
 };
 use axum::{
     async_trait,
@@ -35,10 +35,12 @@ pub enum AuthError {
 pub async fn login_user_handler(
     State(pool): State<PgPool>,
     Json(credentials): Json<LoginCredentials>,
-) -> TaskResult<TokenRespone, String> {
+) -> OpResult<TokenRespone, String> {
     let (password, user) = login::fetch_user_with_credentials(&pool, credentials).await;
 
-    login::authorize_user(&password, user?).await
+    login::authorize_user(&password, user?)
+        .await
+        .map(|t| application::OpSuc::Success(t))
 }
 
 /*
