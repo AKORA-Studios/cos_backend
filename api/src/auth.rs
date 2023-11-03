@@ -3,7 +3,7 @@ use std::ops::Deref;
 use application::{
     auth::{verify_token, JWTClaims},
     user::login,
-    OpResult, OpSuc,
+    TaskResult,
 };
 use axum::{
     async_trait,
@@ -13,7 +13,7 @@ use axum::{
     response::{IntoResponse, Response},
     Json, RequestPartsExt, TypedHeader,
 };
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use serde_json::json;
 use shared::{request_models::LoginCredentials, response_models::TokenRespone};
 use sqlx::PgPool;
@@ -24,12 +24,6 @@ pub struct AuthBody {
     token_type: String,
 }
 
-#[derive(Debug, Deserialize)]
-pub struct AuthPayload {
-    client_id: String,
-    client_secret: String,
-}
-
 #[derive(Debug)]
 pub enum AuthError {
     WrongCredentials,
@@ -38,34 +32,24 @@ pub enum AuthError {
     InvalidToken,
 }
 
-impl AuthBody {
-    fn new(access_token: String) -> Self {
-        Self {
-            access_token,
-            token_type: "Bearer".to_string(),
-        }
-    }
-}
-
 pub async fn login_user_handler(
     State(pool): State<PgPool>,
     Json(credentials): Json<LoginCredentials>,
-) -> OpResult<TokenRespone, String> {
+) -> TaskResult<TokenRespone, String> {
     let (password, user) = login::fetch_user_with_credentials(&pool, credentials).await;
 
-    if let OpSuc::Read(user) = user? {
-        login::authorize_user(&password, user).await
-    } else {
-        unreachable!("Invalid operation")
-    }
+    login::authorize_user(&password, user?).await
 }
 
-async fn protected(claims: JWTClaims) -> Result<String, AuthError> {
+/*
+/// Example usage
+async fn protected(Claims(claims): Claims) -> Result<String, AuthError> {
     // Send the protected data to the user
     Ok(format!(
         "Welcome to the protected area :)\nYour data:\n{claims}",
     ))
 }
+*/
 
 pub struct Claims(pub JWTClaims);
 impl Deref for Claims {

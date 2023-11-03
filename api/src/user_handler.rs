@@ -1,21 +1,29 @@
 // api/src/post_handler.rs
 
-use application::auth::JWTClaims;
-use application::user::{interact, login, modify, read, register};
+use application::user::{modify, read, register};
 use application::{OpResult, OpSuc};
 use axum::extract::{Path, State};
+use axum::http::StatusCode;
 use axum::Json;
-use domain::models::{DisplayUser, PatchedUser};
-use shared::request_models::{LoginCredentials, RegisterUser};
+use domain::models::PatchedUser;
+use shared::request_models::RegisterUser;
 use shared::response_models::UserResponse;
 use sqlx::postgres::PgPool;
+
+use crate::auth::Claims;
+
+pub async fn status() -> StatusCode {
+    StatusCode::OK
+}
 
 /// POST /register - data = <user>
 pub async fn register_user_handler(
     State(pool): State<PgPool>,
     Json(user): Json<RegisterUser>,
 ) -> OpResult<UserResponse, String> {
-    register::register_user(&pool, user).await
+    register::register_user(&pool, user)
+        .await
+        .map(|u| OpSuc::Created(u))
 }
 
 /// GET /users/:user_id
@@ -24,34 +32,36 @@ pub async fn view_user_handler(
     Path(user_id): Path<i32>,
 ) -> OpResult<UserResponse, String> {
     let user = read::view_user(&pool, user_id).await?;
+
     let response = UserResponse { user };
 
     Ok(OpSuc::Read(response))
 }
 
-#[get("/users/me")]
-pub async fn view_me_handler(conn: DbConn, user: JWTClaims) -> Result<String, NotFound<String>> {
-    let user = conn.run(move |c| read::view_user(c, user.user_id)).await?;
+/// GET /users/me
+pub async fn view_me_handler(
+    State(pool): State<PgPool>,
+    Claims(claims): Claims,
+) -> OpResult<UserResponse, String> {
+    let user = read::view_user(&pool, claims.user_id).await?;
     let response = UserResponse { user };
 
-    Ok(serde_json::to_string(&response).unwrap())
+    Ok(OpSuc::Read(response))
+}
+
+/// PATH /users/me <patch_data>
+pub async fn patch_me_handler(
+    State(pool): State<PgPool>,
+    Claims(claims): Claims,
+    Json(patch_data): Json<PatchedUser>,
+) -> OpResult<UserResponse, String> {
+    let user = modify::modify_user(&pool, claims.user_id, patch_data).await?;
+    let response = UserResponse { user };
+
+    Ok(OpSuc::Updated(response))
 }
 
 /*
-#[patch("/users/me", format = "application/json", data = "<patch_data>")]
-pub async fn patch_me_handler(
-    conn: DbConn,
-    user: JWTClaims,
-    patch_data: Json<PatchedUser>,
-) -> Result<String, NotFound<String>> {
-    let user = conn
-        .run(move |c| modify::modify_user(c, user.user_id, patch_data))
-        .await?;
-    let response = UserResponse { user };
-
-    Ok(serde_json::to_string(&response).unwrap())
-}
-
 #[put("/users/<user_id>/follow")]
 pub async fn follow_user_handler(
     conn: DbConn,

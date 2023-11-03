@@ -10,15 +10,14 @@ use shared::{
 use sqlx::PgPool;
 use std::time::{Duration, SystemTime};
 
-use crate::OpSuc;
 use crate::{
     auth::{self, JWTClaims},
     map_sqlx_result,
 };
 
-use crate::{OpErr, OpResult};
+use crate::{OpErr, TaskResult};
 
-fn unauthorized<T: Serialize>() -> OpResult<T, String> {
+fn unauthorized<T: Serialize>() -> TaskResult<T, String> {
     let response = ErrorMessageResponse {
         message: format!("Invalid password or username"),
     };
@@ -31,30 +30,28 @@ fn unauthorized<T: Serialize>() -> OpResult<T, String> {
 pub async fn fetch_user_with_credentials(
     conn: &PgPool,
     credentials: LoginCredentials,
-) -> (String, OpResult<User, String>) {
+) -> (String, TaskResult<User, String>) {
     let (password, user) = match credentials {
         LoginCredentials::UsernameCredentials { username, password } => (
             password,
             sqlx::query_as::<_, User>(r#"SELECT * FROM "users" WHERE username = ?"#)
                 .bind(username)
                 .fetch_one(conn)
-                .await
-                .map(|u| OpSuc::Read(u)),
+                .await,
         ),
         LoginCredentials::EmailCredentials { email, password } => (
             password,
             sqlx::query_as::<_, User>(r#"SELECT * FROM "users" WHERE email = ?"#)
                 .bind(email)
                 .fetch_one(conn)
-                .await
-                .map(|u| OpSuc::Read(u)),
+                .await,
         ),
     };
 
     (password, map_sqlx_result(user))
 }
 
-pub async fn authorize_user(password: &str, user: User) -> OpResult<TokenRespone, String> {
+pub async fn authorize_user(password: &str, user: User) -> TaskResult<TokenRespone, String> {
     match PasswordHash::new(&user.password_hash) {
         Ok(parsed_hash) => {
             match Argon2::default().verify_password(password.as_bytes(), &parsed_hash) {
@@ -84,7 +81,7 @@ pub async fn authorize_user(password: &str, user: User) -> OpResult<TokenRespone
                         Ok(token) => {
                             let response = TokenRespone { token };
 
-                            Ok(OpSuc::Success(response))
+                            Ok(response)
                         }
                         Err(e) => panic!("JWT encoding error - {}", e),
                     }

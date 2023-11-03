@@ -7,4 +7,4 @@ pub mod auth;
 pub mod user;
 mod util;
 pub use util::map_sqlx_result;
-pub use util::{OpErr, OpResult, OpSuc};
+pub use util::{OpErr, OpResult, OpSuc, TaskResult};

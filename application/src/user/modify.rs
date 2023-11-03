@@ -4,13 +4,13 @@ use domain::models::{DisplayUser, PatchedUser, DISPLAY_USER_COLUMNS};
 
 use sqlx::{PgPool, Postgres, QueryBuilder};
 
-use crate::{map_sqlx_result, OpErr, OpResult, OpSuc};
+use crate::{map_sqlx_result, OpErr, TaskResult};
 
 pub async fn modify_user(
     conn: &PgPool,
     user_id: i32,
     patch_data: PatchedUser,
-) -> OpResult<DisplayUser, String> {
+) -> TaskResult<DisplayUser, String> {
     let mut query: QueryBuilder<Postgres> = QueryBuilder::new(r#"UPDATE "users" SET "#);
 
     //    let sep = query.separated(", ");
@@ -31,5 +31,5 @@ pub async fn modify_user(
 
     let result = finished_query.fetch_one(conn).await;
 
-    map_sqlx_result(result.map(|v| OpSuc::Updated(v)))
+    map_sqlx_result(result)
 }

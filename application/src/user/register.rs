@@ -9,7 +9,7 @@ use argon2::{
 };
 use sqlx::PgPool;
 
-use crate::{map_sqlx_result, OpResult, OpSuc};
+use crate::{map_sqlx_result, TaskResult};
 
 fn hash_password(password: &[u8]) -> String {
     let salt = SaltString::generate(&mut OsRng);
@@ -24,7 +24,7 @@ fn hash_password(password: &[u8]) -> String {
         .to_string()
 }
 
-pub async fn register_user(conn: &PgPool, user: RegisterUser) -> OpResult<UserResponse, String> {
+pub async fn register_user(conn: &PgPool, user: RegisterUser) -> TaskResult<UserResponse, String> {
     let hashed_password = hash_password(user.password.as_bytes());
 
     let sql = format!(
@@ -51,5 +51,5 @@ pub async fn register_user(conn: &PgPool, user: RegisterUser) -> OpResult<UserRe
         .fetch_one(conn)
         .await;
 
-    map_sqlx_result(result.map(|v| OpSuc::Created(UserResponse { user: v })))
+    map_sqlx_result(result.map(|v| UserResponse { user: v }))
 }

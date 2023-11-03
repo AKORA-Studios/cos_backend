@@ -1,22 +1,18 @@
 // api/src/bin/main.rs
 use dotenvy::dotenv;
-use std::env;
+use std::{env, time::Duration};
+use tokio;
 
-use api::{event_handler, image_handler, message_handler, post_handler, user_handler};
-
+//event_handler, image_handler, message_handler, post_handler,
 use std::fs;
 
 use axum::{
-    http::StatusCode,
-    response::IntoResponse,
-    routing::{get, post},
-    Json, Router,
+    routing::{get, patch, post},
+    Router,
 };
 use std::net::SocketAddr;
 
-use sqlx::postgres::{PgPool, PgPoolOptions};
-use tokio::net::TcpListener;
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use sqlx::postgres::PgPoolOptions;
 
 #[tokio::main]
 async fn main() {
@@ -40,23 +36,37 @@ async fn main() {
     // set up connection pool
     let pool = PgPoolOptions::new()
         .max_connections(5)
-        //.acquire_timeout(Duration::from_secs(3))
-        .connect(&db_connection_str)
+        .acquire_timeout(Duration::from_secs(3))
+        .connect(&database_url)
         .await
         .expect("can't connect to database");
 
+    if let Err(e) = infrastructure::run_migrations(&pool).await {
+        panic!("Error while running migrations: {e}")
+    }
+
+    use api::user_handler::*;
+
     // build our application with a route
     let app = Router::new()
-        // `GET /` goes to `root`
-        .route("/", get(root))
-        // `POST /users` goes to `create_user`
-        .route("/users", post(create_user))
+        .route("/", get(api::user_handler::status))
+        .nest(
+            "/api",
+            Router::new()
+                .route("/register", post(register_user_handler))
+                .route("/users/:user_id", get(view_user_handler))
+                .route("/users/me", get(view_me_handler))
+                .route("/users/me", patch(patch_me_handler)),
+        )
         .with_state(pool);
+
+    // User handlers
 
     // run our app with hyper
     // `axum::Server` is a re-export of `hyper::Server`
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
-    tracing::debug!("listening on {}", addr);
+    //tracing::debug!("listening on {}", addr);
+    println!("listening on http://{}", addr);
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await

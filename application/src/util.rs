@@ -1,7 +1,15 @@
 use serde::Serialize;
 
+/// Things like looking up a user are considered a Task
+/// tasks don't include they're operation type in their
+/// signature to make working with them easier
+pub type TaskResult<V, E> = Result<V, OpErr<E>>;
+
+/// Handling an incoming request from the
+/// Server is considered a single Operation
+/// containing multiple tasks
 pub type OpResult<V, E> = Result<OperationSuccess<V>, OperationError<E>>;
-type OperationResult<V, E> = OpResult<V, E>;
+// type OperationResult<V, E> = OpResult<V, E>;
 
 /// OperationSuccess
 pub enum OpSuc<V: Serialize> {
@@ -22,9 +30,7 @@ pub enum OpErr<E: Serialize> {
 }
 type OperationError<V> = OpErr<V>;
 
-pub fn map_sqlx_result<T: Serialize>(
-    result: Result<OperationSuccess<T>, sqlx::Error>,
-) -> OperationResult<T, String> {
+pub fn map_sqlx_result<T>(result: Result<T, sqlx::Error>) -> Result<T, OperationError<String>> {
     result.map_err(|e| match e {
         sqlx::Error::RowNotFound => OperationError::NotFound("".to_owned()),
         _ => OperationError::InternalError(e.to_string()),
