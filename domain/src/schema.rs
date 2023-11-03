@@ -14,7 +14,7 @@ diesel::table! {
         id -> Int4,
         url -> Varchar,
         content_type -> ContentType,
-        created_at -> Timestamp,
+        created_at -> TIMESTAMPTZ,
     }
 }
 
@@ -26,7 +26,7 @@ diesel::table! {
         post_id -> Int4,
         reply_to -> Nullable<Int4>,
         upvotes -> Int4,
-        created_at -> Timestamp,
+        created_at -> TIMESTAMPTZ,
     }
 }
 
@@ -34,8 +34,8 @@ diesel::table! {
     events (id) {
         id -> Int4,
         name -> Varchar,
-        start_time -> Timestamp,
-        end_time -> Timestamp,
+        start_time -> TIMESTAMPTZ,
+        end_time -> TIMESTAMPTZ,
         lat -> Float8,
         lon -> Float8,
     }
@@ -49,7 +49,7 @@ diesel::table! {
         reply_to -> Nullable<Int4>,
         from_id -> Int4,
         to_id -> Int4,
-        created_at -> Timestamp,
+        created_at -> TIMESTAMPTZ,
     }
 }
 
@@ -84,7 +84,7 @@ diesel::table! {
         photographer_id -> Nullable<Int4>,
         lat -> Nullable<Float8>,
         lon -> Nullable<Float8>,
-        created_at -> Timestamp,
+        created_at -> TIMESTAMPTZ,
     }
 }
 
@@ -109,7 +109,7 @@ diesel::table! {
         nickname -> Varchar,
         password_hash -> Varchar,
         email -> Varchar,
-        created_at -> Timestamp,
+        created_at -> TIMESTAMPTZ,
         twitter_username -> Nullable<Varchar>,
         instagram_username -> Nullable<Varchar>,
         tiktok_username -> Nullable<Varchar>,
