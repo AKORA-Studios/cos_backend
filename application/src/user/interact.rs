@@ -1,115 +1,68 @@
 // application/src/user/read.rs
 
-use diesel::prelude::*;
-use domain::models::{UserBlocked, UserFollows};
+use crate::{map_sqlx_result, TaskResult};
+use sqlx::PgPool;
 
-use rocket::response::status::NotFound;
-use shared::response_models::ErrorMessageResponse;
+pub async fn follow_user(pool: &PgPool, user_id: i32, following_id: i32) -> TaskResult<(), String> {
+    let query = sqlx::query(
+        r#"
+        INSERT INTO user_follows (user_id, following_id)
+        VALUES ($1, $2)
+        "#,
+    )
+    .bind(user_id)
+    .bind(following_id);
 
-pub fn follow_user(
-    db_conn: &mut PgConnection,
+    let result = query.execute(pool).await;
+
+    map_sqlx_result(result.map(|_| ()))
+}
+
+pub async fn unfollow_user(
+    pool: &PgPool,
     user_id: i32,
     following_id: i32,
-) -> Result<(), NotFound<String>> {
-    use domain::schema::user_follows;
+) -> TaskResult<(), String> {
+    let query = sqlx::query(
+        r#"
+            DELETE FROM user_follows
+            WHERE user_id = $1 AND following_id = $2
+            "#,
+    )
+    .bind(user_id)
+    .bind(following_id);
 
-    let val = UserFollows {
-        user_id,
-        following_id,
-    };
+    let result = query.execute(pool).await;
 
-    let result = diesel::insert_into(user_follows::table)
-        .values(&val)
-        .execute(db_conn);
-
-    map_error(result)
+    map_sqlx_result(result.map(|_| ()))
 }
 
-pub fn unfollow_user(
-    db_conn: &mut PgConnection,
-    user_id: i32,
-    following_id: i32,
-) -> Result<(), NotFound<String>> {
-    use domain::schema::user_follows;
+pub async fn block_user(pool: &PgPool, user_id: i32, blocked_id: i32) -> TaskResult<(), String> {
+    let query = sqlx::query(
+        r#"
+            INSERT INTO user_blocked (user_id, blocked_id)
+            VALUES ($1, $2)
+            "#,
+    )
+    .bind(user_id)
+    .bind(blocked_id);
 
-    let filter = user_follows::user_id
-        .eq(user_id)
-        .and(user_follows::following_id.eq(following_id));
+    let result = query.execute(pool).await;
 
-    let result = diesel::delete(user_follows::table)
-        .filter(filter)
-        .execute(db_conn);
-
-    map_error(result)
+    map_sqlx_result(result.map(|_| ()))
 }
 
-pub fn block_user(
-    db_conn: &mut PgConnection,
-    user_id: i32,
-    blocked_id: i32,
-) -> Result<(), NotFound<String>> {
-    use domain::schema::user_blocked;
+pub async fn unblock_user(pool: &PgPool, user_id: i32, blocked_id: i32) -> TaskResult<(), String> {
+    let query = sqlx::query(
+        r#"
+                DELETE FROM user_blocked
+                WHERE user_id = $1 AND blocked_id = $2
+                "#,
+    )
+    .bind(user_id)
+    .bind(blocked_id);
 
-    let val = UserBlocked {
-        user_id,
-        blocked_id,
-    };
+    let result = query.execute(pool).await;
 
-    let result = diesel::insert_into(user_blocked::table)
-        .values(&val)
-        .execute(db_conn);
-
-    map_error(result)
-}
-
-pub fn unblock_user(
-    db_conn: &mut PgConnection,
-    user_id: i32,
-    blocked_id: i32,
-) -> Result<(), NotFound<String>> {
-    use domain::schema::user_blocked;
-
-    let filter = user_blocked::user_id
-        .eq(user_id)
-        .and(user_blocked::blocked_id.eq(blocked_id));
-
-    let result = diesel::delete(user_blocked::table)
-        .filter(filter)
-        .execute(db_conn);
-
-    map_error(result)
-}
-
-/*
-
-
-
-
-
-
-
-
-*/
-
-fn map_error(result: diesel::QueryResult<usize>) -> Result<(), NotFound<String>> {
-    match result {
-        Ok(_rows) => Ok(()),
-        Err(err) => match &err {
-            diesel::result::Error::DatabaseError(kind, _) => match kind {
-                // Post already liked
-                diesel::result::DatabaseErrorKind::UniqueViolation => Ok(()),
-                // Post ID incorrect
-                diesel::result::DatabaseErrorKind::ForeignKeyViolation => {
-                    let response = ErrorMessageResponse {
-                        message: format!("User not found."),
-                    };
-                    Err(NotFound(serde_json::to_string(&response).unwrap()))
-                }
-                _ => panic!("Database error - {}", err),
-            },
-            _ => {
-                panic!("Database error - {}", err);
-            }
-        },
-    }
+    map_sqlx_result(result.map(|_| ()))
 }

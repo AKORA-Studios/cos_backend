@@ -8,43 +8,25 @@ use shared::response_models::ErrorMessageResponse;
 
 /// IMPORTANT: User ID is required so users cannot delete arbitrary posts,
 /// the user ID should be the ID of the user interacting with this API
-pub fn delete_post(
-    db_conn: &mut PgConnection,
-    user_id: i32,
-    post_id: i32,
-) -> Result<(), NotFound<String>> {
-    use domain::schema::posts;
-
+pub async fn delete_post(pool: &PgPool, user_id: i32, post_id: i32) -> TaskResult<(), String> {
     let filter = posts::id.eq(post_id).and(posts::user_id.eq(user_id));
 
     let result = diesel::delete(posts::table).filter(filter).execute(db_conn);
 
-    map_error(result)
+    map_sqlx_result(result)
 }
 
-pub fn like_post(
-    db_conn: &mut PgConnection,
-    user_id: i32,
-    post_id: i32,
-) -> Result<(), NotFound<String>> {
-    use domain::schema::post_likes;
-
+pub async fn like_post(pool: &PgPool, user_id: i32, post_id: i32) -> TaskResult<(), String> {
     let val = PostLikes { post_id, user_id };
 
     let result = diesel::insert_into(post_likes::table)
         .values(&val)
         .execute(db_conn);
 
-    map_error(result)
+    map_sqlx_result(result)
 }
 
-pub fn dislike_post(
-    db_conn: &mut PgConnection,
-    user_id: i32,
-    post_id: i32,
-) -> Result<(), NotFound<String>> {
-    use domain::schema::post_likes;
-
+pub async fn dislike_post(pool: &PgPool, user_id: i32, post_id: i32) -> TaskResult<(), String> {
     let filter = post_likes::user_id
         .eq(user_id)
         .and(post_likes::post_id.eq(post_id));
@@ -53,23 +35,17 @@ pub fn dislike_post(
         .filter(filter)
         .execute(db_conn);
 
-    map_error(result)
+    map_sqlx_result(result)
 }
 
-pub fn download_post(
-    db_conn: &mut PgConnection,
-    user_id: i32,
-    post_id: i32,
-) -> Result<(), NotFound<String>> {
-    use domain::schema::post_downloads;
-
+pub async fn download_post(pool: &PgPool, user_id: i32, post_id: i32) -> TaskResult<(), String> {
     let val = PostDownloads { post_id, user_id };
 
     let result = diesel::insert_into(post_downloads::table)
         .values(&val)
         .execute(db_conn);
 
-    map_error(result)
+    map_sqlx_result(result)
 }
 
 /*
@@ -83,7 +59,7 @@ pub fn download_post(
 
 */
 
-fn map_error(result: diesel::QueryResult<usize>) -> Result<(), NotFound<String>> {
+fn map_error(result: diesel::QueryResult<usize>) -> TaskResult<(), String> {
     match result {
         Ok(_rows) => Ok(()),
         Err(err) => match &err {

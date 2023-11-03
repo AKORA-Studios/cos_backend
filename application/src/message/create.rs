@@ -10,8 +10,8 @@ use shared::response_models::MessageResponse;
 
 use crate::auth::JWTClaims;
 
-pub fn create_message(
-    db_conn: &mut PgConnection,
+pub async fn create_message(
+    pool: &PgPool,
     from_user: JWTClaims,
     to_user_id: i32,
     msg: Json<NewMessage>,

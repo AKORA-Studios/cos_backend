@@ -1,6 +1,6 @@
 // api/src/post_handler.rs
 
-use application::user::{modify, read, register};
+use application::user::{interact, modify, read, register};
 use application::{OpResult, OpSuc};
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
@@ -61,44 +61,46 @@ pub async fn patch_me_handler(
     Ok(OpSuc::Updated(response))
 }
 
-/*
-#[put("/users/<user_id>/follow")]
+/// PUT /users/:user_id/follow
 pub async fn follow_user_handler(
-    conn: DbConn,
-    user: JWTClaims,
-    user_id: i32,
-) -> Result<(), NotFound<String>> {
-    conn.run(move |c| interact::follow_user(c, user.user_id, user_id))
+    State(pool): State<PgPool>,
+    Path(user_id): Path<i32>,
+    Claims(claims): Claims,
+) -> OpResult<(), String> {
+    interact::follow_user(&pool, claims.user_id, user_id)
         .await
+        .map(|_| OpSuc::Created(()))
 }
 
-#[put("/users/<user_id>/unfollow")]
+/// PUT /users/:user_id/unfollow
 pub async fn unfollow_user_handler(
-    conn: DbConn,
-    user: JWTClaims,
-    user_id: i32,
-) -> Result<(), NotFound<String>> {
-    conn.run(move |c| interact::unfollow_user(c, user.user_id, user_id))
+    State(pool): State<PgPool>,
+    Path(user_id): Path<i32>,
+    Claims(claims): Claims,
+) -> OpResult<(), String> {
+    interact::unfollow_user(&pool, claims.user_id, user_id)
         .await
+        .map(|_| OpSuc::Deleted(()))
 }
 
-#[put("/users/<user_id>/block")]
+/// PUT /users/:user_id/block
 pub async fn block_user_handler(
-    conn: DbConn,
-    user: JWTClaims,
-    user_id: i32,
-) -> Result<(), NotFound<String>> {
-    conn.run(move |c| interact::block_user(c, user.user_id, user_id))
+    State(pool): State<PgPool>,
+    Path(user_id): Path<i32>,
+    Claims(claims): Claims,
+) -> OpResult<(), String> {
+    interact::block_user(&pool, claims.user_id, user_id)
         .await
+        .map(|_| OpSuc::Created(()))
 }
 
-#[put("/users/<user_id>/unblock")]
+/// PUT /users/:user_id/unblock
 pub async fn unblock_user_handler(
-    conn: DbConn,
-    user: JWTClaims,
-    user_id: i32,
-) -> Result<(), NotFound<String>> {
-    conn.run(move |c| interact::unblock_user(c, user.user_id, user_id))
+    State(pool): State<PgPool>,
+    Path(user_id): Path<i32>,
+    Claims(claims): Claims,
+) -> OpResult<(), String> {
+    interact::unblock_user(&pool, claims.user_id, user_id)
         .await
+        .map(|_| OpSuc::Deleted(()))
 }
-*/

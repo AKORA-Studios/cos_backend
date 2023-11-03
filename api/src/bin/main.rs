@@ -9,7 +9,7 @@ use std::fs;
 
 use axum::{
     http::StatusCode,
-    routing::{get, patch, post},
+    routing::{get, patch, post, put},
     Router,
 };
 use std::net::SocketAddr;
@@ -57,7 +57,10 @@ async fn main() {
             Router::new()
                 .route("/login", post(login_user_handler))
                 .route("/register", post(register_user_handler))
-                .route("/users/:user_id", get(view_user_handler))
+                .route("/users/:user_id/follow", put(follow_user_handler))
+                .route("/users/:user_id/unfollow", put(unfollow_user_handler))
+                .route("/users/:user_id/block", put(block_user_handler))
+                .route("/users/:user_id/unblock", put(unblock_user_handler))
                 .route("/users/me", get(view_me_handler))
                 .route("/users/me", patch(patch_me_handler)),
         )

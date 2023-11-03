@@ -8,13 +8,7 @@ use rocket::serde::json::Json;
 use shared::request_models::NewPost;
 use shared::response_models::PostResponse;
 
-pub fn create_post(
-    db_conn: &mut PgConnection,
-    user_id: i32,
-    post: Json<NewPost>,
-) -> Created<String> {
-    use domain::schema::posts;
-
+pub async fn create_post(pool: &PgPool, user_id: i32, post: Json<NewPost>) -> Created<String> {
     let post = post.into_inner();
     let post = InsertablePost {
         user_id,

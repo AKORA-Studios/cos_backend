@@ -15,13 +15,13 @@ pub async fn create_post_handler(
     user: JWTClaims,
     post: Json<NewPost>,
 ) -> Created<String> {
-    conn.run(move |c| create::create_post(c, user.user_id, post))
+    create::create_post(&pool, user.user_id, post))
         .await
 }
 
 #[get("/posts/<post_id>")]
 pub async fn view_post_handler(conn: DbConn, post_id: i32) -> Result<String, NotFound<String>> {
-    let post = conn.run(move |c| read::view_post(c, post_id)).await?;
+    let post = read::view_post(&pool, post_id)).await?;
     let response = FullPostResponse { post };
 
     Ok(serde_json::to_string(&response).unwrap())
@@ -32,8 +32,8 @@ pub async fn delete_post_handler(
     conn: DbConn,
     user: JWTClaims,
     post_id: i32,
-) -> Result<(), NotFound<String>> {
-    conn.run(move |c| interact::delete_post(c, user.user_id, post_id))
+) -> OpResult<(), String> {
+    interact::delete_post(&pool, user.user_id, post_id))
         .await
 }
 
@@ -42,8 +42,8 @@ pub async fn like_post_handler(
     conn: DbConn,
     user: JWTClaims,
     post_id: i32,
-) -> Result<(), NotFound<String>> {
-    conn.run(move |c| interact::like_post(c, user.user_id, post_id))
+) -> OpResult<(), String> {
+    interact::like_post(&pool, user.user_id, post_id))
         .await
 }
 
@@ -52,8 +52,8 @@ pub async fn dislike_post_handler(
     conn: DbConn,
     user: JWTClaims,
     post_id: i32,
-) -> Result<(), NotFound<String>> {
-    conn.run(move |c| interact::dislike_post(c, user.user_id, post_id))
+) -> OpResult<(), String> {
+    interact::dislike_post(&pool, user.user_id, post_id))
         .await
 }
 
@@ -62,8 +62,8 @@ pub async fn download_post_handler(
     conn: DbConn,
     user: JWTClaims,
     post_id: i32,
-) -> Result<(), NotFound<String>> {
-    conn.run(move |c| interact::download_post(c, user.user_id, post_id))
+) -> OpResult<(), String> {
+    interact::download_post(&pool, user.user_id, post_id))
         .await
 }
 
@@ -79,7 +79,7 @@ pub async fn create_comment_handler(
     post_id: i32,
     comment: Json<NewComment>,
 ) -> Created<String> {
-    conn.run(move |c| comment::create_post_comment(c, user.user_id, post_id, comment))
+    comment::create_post_comment(&pool, user.user_id, post_id, comment))
         .await
 }
 
@@ -91,7 +91,7 @@ pub async fn list_recent_comments_handler(
 ) -> Result<String, NotFound<String>> {
     let limit = limit.unwrap_or(25);
     let comments = conn
-        .run(move |c| comment::list_recent_comments(c, post_id, limit))
+        .run(move |c| comment::list_recent_comments(&pool, post_id, limit))
         .await;
 
     let response = CommentsRespone { comments };
@@ -105,7 +105,7 @@ pub async fn list_today_posts_handler(
     limit: Option<usize>,
 ) -> Result<String, NotFound<String>> {
     let limit = limit.unwrap_or(25);
-    let posts = conn.run(move |c| read::list_today_posts(c, limit)).await;
+    let posts = read::list_today_posts(&pool, limit)).await;
 
     let response = FullPostsResponse { posts };
 
@@ -118,7 +118,7 @@ pub async fn list_recent_posts_handler(
     limit: Option<usize>,
 ) -> Result<String, NotFound<String>> {
     let limit = limit.unwrap_or(25);
-    let posts = conn.run(move |c| read::list_recent_posts(c, limit)).await;
+    let posts = read::list_recent_posts(&pool, limit)).await;
 
     let response = FullPostsResponse { posts };
 
@@ -133,7 +133,7 @@ pub async fn list_user_posts_handler(
 ) -> Result<String, NotFound<String>> {
     let limit = limit.unwrap_or(25);
     let posts = conn
-        .run(move |c| read::list_user_posts(c, user_id, limit))
+        .run(move |c| read::list_user_posts(&pool, user_id, limit))
         .await;
     let response = FullPostsResponse { posts };
 

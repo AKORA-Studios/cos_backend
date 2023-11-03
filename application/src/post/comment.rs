@@ -8,14 +8,12 @@ use rocket::serde::json::Json;
 use shared::request_models::NewComment;
 use shared::response_models::CommentRespone;
 
-pub fn create_post_comment(
-    db_conn: &mut PgConnection,
+pub async fn create_post_comment(
+    pool: &PgPool,
     user_id: i32,
     post_id: i32,
     comment: Json<NewComment>,
 ) -> Created<String> {
-    use domain::schema::comments;
-
     let comment_data = comment.into_inner();
     let comment = InsertableComment {
         content: comment_data.content,
@@ -40,11 +38,7 @@ pub fn create_post_comment(
     }
 }
 
-pub fn list_recent_comments(
-    db_conn: &mut PgConnection,
-    c_post_id: i32,
-    limit: usize,
-) -> Vec<Comment> {
+pub async fn list_recent_comments(pool: &PgPool, c_post_id: i32, limit: usize) -> Vec<Comment> {
     use domain::schema::comments::dsl::*;
 
     let result = comments

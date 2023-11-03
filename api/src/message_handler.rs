@@ -20,7 +20,7 @@ pub async fn create_message_handler(
     to_user_id: i32,
     msg: Json<NewMessage>,
 ) -> Created<String> {
-    conn.run(move |c| create::create_message(c, user, to_user_id, msg))
+    create::create_message(&pool, user, to_user_id, msg))
         .await
 }
 
@@ -34,7 +34,7 @@ pub async fn list_conversation_handler(
     let limit = limit.unwrap_or(20).clamp(1, 100);
 
     let messages = conn
-        .run(move |c| read::list_messages(c, req_user.user_id, user_id, limit))
+        .run(move |c| read::list_messages(&pool, req_user.user_id, user_id, limit))
         .await?;
     let response = MessagesResponse { messages };
 

@@ -14,9 +14,8 @@ use crate::util::map_diesel_result;
 
 // !TODO Also return users if they already liked a post or not
 
-pub fn view_post(db_conn: &mut PgConnection, post_id: i32) -> Result<FullPost, NotFound<String>> {
+pub async fn view_post(pool: &PgPool, post_id: i32) -> Result<FullPost, NotFound<String>> {
     use domain::schema::posts::dsl::*;
-    use domain::schema::users;
 
     let result = posts
         .find(post_id)
@@ -39,9 +38,8 @@ pub fn view_post(db_conn: &mut PgConnection, post_id: i32) -> Result<FullPost, N
     })
 }
 
-pub fn list_recent_posts(db_conn: &mut PgConnection, limit: usize) -> Vec<FullPost> {
+pub async fn list_recent_posts(pool: &PgPool, limit: usize) -> Vec<FullPost> {
     use domain::schema::posts::dsl::*;
-    use domain::schema::users;
 
     let result = posts
         .order(created_at.desc())
@@ -69,9 +67,8 @@ pub fn list_recent_posts(db_conn: &mut PgConnection, limit: usize) -> Vec<FullPo
     }
 }
 
-pub fn list_today_posts(db_conn: &mut PgConnection, limit: usize) -> Vec<FullPost> {
+pub async fn list_today_posts(pool: &PgPool, limit: usize) -> Vec<FullPost> {
     use domain::schema::posts::dsl::*;
-    use domain::schema::users;
 
     let result = posts
         .select(all_columns)
@@ -98,10 +95,7 @@ pub fn list_today_posts(db_conn: &mut PgConnection, limit: usize) -> Vec<FullPos
     }
 }
 
-pub fn list_user_posts(db_conn: &mut PgConnection, user_id: i32, limit: usize) -> Vec<FullPost> {
-    use domain::schema::posts;
-    use domain::schema::users;
-
+pub async fn list_user_posts(pool: &PgPool, user_id: i32, limit: usize) -> Vec<FullPost> {
     let result = posts::table
         .select(all_columns)
         .filter(posts::user_id.eq(user_id))
@@ -145,10 +139,6 @@ fn get_post_info(
     post: &JoinedPostWithUser,
     conn: &mut PgConnection,
 ) -> diesel::result::QueryResult<(i64, i64, Vec<i32>)> {
-    use domain::schema::post_depicted_people;
-    use domain::schema::post_downloads;
-    use domain::schema::post_likes;
-
     let downloads: i64 = post_downloads::table
         .filter(post_downloads::post_id.eq(post.id))
         .count()

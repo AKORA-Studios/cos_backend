@@ -4,7 +4,7 @@ use domain::models::{DisplayUser, PatchedUser, DISPLAY_USER_COLUMNS};
 
 use sqlx::{PgPool, Postgres, QueryBuilder};
 
-use crate::{map_sqlx_result, OpErr, TaskResult};
+use crate::{map_sqlx_result, TaskResult};
 
 pub async fn modify_user(
     conn: &PgPool,
