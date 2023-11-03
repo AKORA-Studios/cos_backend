@@ -1,8 +1,9 @@
-use std::{fmt::Display, ops::Deref};
+use std::ops::Deref;
 
 use application::{
     auth::{verify_token, JWTClaims},
     user::login,
+    OpResult, OpSuc,
 };
 use axum::{
     async_trait,
@@ -14,8 +15,10 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use shared::request_models::LoginCredentials;
+use shared::{request_models::LoginCredentials, response_models::TokenRespone};
 use sqlx::PgPool;
+
+use crate::util::WrappedRes;
 
 #[derive(Debug, Serialize)]
 pub struct AuthBody {
@@ -49,12 +52,21 @@ impl AuthBody {
 pub async fn login_user_handler(
     State(pool): State<PgPool>,
     Json(credentials): Json<LoginCredentials>,
-) -> Result<std::string::String, AuthError> {
+) -> WrappedRes<TokenRespone, String> {
     let (password, user) = login::fetch_user_with_credentials(&pool, credentials).await;
-    match user {
-        Ok(user) => login::authorize_user(&password, user).await,
-        _ => panic!(""),
+
+    if let OpSuc::Read(user) = user? {
+        Ok(login::authorize_user(&password, user).await?)
+    } else {
+        unreachable!("Invalid operation")
     }
+}
+
+pub async fn login_user_handler_2(
+    state: State<PgPool>,
+    json: Json<LoginCredentials>,
+) -> WrappedRes<TokenRespone, String> {
+    WrappedRes(login_user_handler(state, json).await)
 }
 
 async fn protected(claims: JWTClaims) -> Result<String, AuthError> {

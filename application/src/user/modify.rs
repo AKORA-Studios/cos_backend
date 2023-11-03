@@ -21,7 +21,7 @@ pub async fn modify_user(
             .push("=")
             .push_bind(patch_data.nickname);
     } else {
-        return Err(OpErr::Any);
+        return Err(OpErr::Any("A".to_owned()));
     }
 
     query.push(" WHERE id = ").push_bind(user_id);

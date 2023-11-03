@@ -10,8 +10,11 @@ use shared::{
 use sqlx::PgPool;
 use std::time::{Duration, SystemTime};
 
-use crate::auth::{self, JWTClaims};
 use crate::OpSuc;
+use crate::{
+    auth::{self, JWTClaims},
+    map_sqlx_result,
+};
 
 use crate::{OpErr, OpResult};
 
@@ -28,26 +31,30 @@ fn unauthorized<T: Serialize>() -> OpResult<T, String> {
 pub async fn fetch_user_with_credentials(
     conn: &PgPool,
     credentials: LoginCredentials,
-) -> (String, Result<User, sqlx::Error>) {
-    match credentials {
+) -> (String, OpResult<User, String>) {
+    let (password, user) = match credentials {
         LoginCredentials::UsernameCredentials { username, password } => (
             password,
             sqlx::query_as::<_, User>(r#"SELECT * FROM "users" WHERE username = ?"#)
                 .bind(username)
                 .fetch_one(conn)
-                .await,
+                .await
+                .map(|u| OpSuc::Read(u)),
         ),
         LoginCredentials::EmailCredentials { email, password } => (
             password,
             sqlx::query_as::<_, User>(r#"SELECT * FROM "users" WHERE email = ?"#)
                 .bind(email)
                 .fetch_one(conn)
-                .await,
+                .await
+                .map(|u| OpSuc::Read(u)),
         ),
-    }
+    };
+
+    (password, map_sqlx_result(user))
 }
 
-pub async fn authorize_user(password: &str, user: User) -> OpResult<String, String> {
+pub async fn authorize_user(password: &str, user: User) -> OpResult<TokenRespone, String> {
     match PasswordHash::new(&user.password_hash) {
         Ok(parsed_hash) => {
             match Argon2::default().verify_password(password.as_bytes(), &parsed_hash) {
@@ -77,7 +84,7 @@ pub async fn authorize_user(password: &str, user: User) -> OpResult<String, Stri
                         Ok(token) => {
                             let response = TokenRespone { token };
 
-                            Ok(OpSuc::Success(serde_json::to_string(&response).unwrap()))
+                            Ok(OpSuc::Success(response))
                         }
                         Err(e) => panic!("JWT encoding error - {}", e),
                     }

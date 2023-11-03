@@ -1,8 +1,7 @@
 use serde::Serialize;
 
-type Serializeable<T: Serialize> = T;
-pub type OpResult<V: Serialize, E: Serialize> = Result<OperationSuccess<V>, OperationError<E>>;
-type OperationResult<V: Serialize, E: Serialize> = OpResult<V, E>;
+pub type OpResult<V, E> = Result<OperationSuccess<V>, OperationError<E>>;
+type OperationResult<V, E> = OpResult<V, E>;
 
 /// OperationSuccess
 pub enum OpSuc<V: Serialize> {
@@ -12,22 +11,22 @@ pub enum OpSuc<V: Serialize> {
     Deleted(V),
     Read(V),
 }
-type OperationSuccess<V: Serialize> = OpSuc<V>;
+type OperationSuccess<V> = OpSuc<V>;
 
 /// OperationError
 pub enum OpErr<E: Serialize> {
     InternalError(E),
     Unauthorized(E),
-    NotFound,
-    Any,
+    NotFound(E),
+    Any(E),
 }
-type OperationError<V: Serialize> = OpErr<V>;
+type OperationError<V> = OpErr<V>;
 
 pub fn map_sqlx_result<T: Serialize>(
     result: Result<OperationSuccess<T>, sqlx::Error>,
 ) -> OperationResult<T, String> {
     result.map_err(|e| match e {
-        sqlx::Error::RowNotFound => OperationError::NotFound,
+        sqlx::Error::RowNotFound => OperationError::NotFound("".to_owned()),
         _ => OperationError::InternalError(e.to_string()),
     })
 }

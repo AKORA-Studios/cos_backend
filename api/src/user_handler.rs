@@ -31,6 +31,7 @@ pub async fn view_me_handler(conn: DbConn, user: JWTClaims) -> Result<String, No
     Ok(serde_json::to_string(&response).unwrap())
 }
 
+/*
 #[patch("/users/me", format = "application/json", data = "<patch_data>")]
 pub async fn patch_me_handler(
     conn: DbConn,
@@ -84,3 +85,4 @@ pub async fn unblock_user_handler(
     conn.run(move |c| interact::unblock_user(c, user.user_id, user_id))
         .await
 }
+*/
