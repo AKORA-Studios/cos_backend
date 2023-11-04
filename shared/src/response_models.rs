@@ -1,6 +1,6 @@
 // shared/src/response_models.rs
 
-use domain::models::{Comment, DisplayUser, Event, FullPost, Message, Post};
+use domain::models::{Comment, DisplayUser, Event, Message};
 use serde::Serialize;
 
 #[derive(Serialize)]
@@ -19,23 +19,13 @@ pub struct MessagesResponse {
 }
 
 #[derive(Serialize)]
-pub struct PostResponse {
-    pub post: Post,
+pub struct PostResponse<P: Serialize> {
+    pub post: P,
 }
 
 #[derive(Serialize)]
-pub struct PostsResponse {
-    pub posts: Vec<Post>,
-}
-
-#[derive(Serialize)]
-pub struct FullPostResponse {
-    pub post: FullPost,
-}
-
-#[derive(Serialize)]
-pub struct FullPostsResponse {
-    pub posts: Vec<FullPost>,
+pub struct PostsResponse<P: Serialize> {
+    pub posts: Vec<P>,
 }
 
 #[derive(Serialize)]
@@ -44,21 +34,21 @@ pub struct UserResponse {
 }
 
 #[derive(Serialize)]
-pub struct EventRespone {
+pub struct EventResponse {
     pub event: Event,
 }
 
 #[derive(Serialize)]
-pub struct CommentRespone {
+pub struct CommentResponse {
     pub comment: Comment,
 }
 
 #[derive(Serialize)]
-pub struct CommentsRespone {
+pub struct CommentsResponse {
     pub comments: Vec<Comment>,
 }
 
 #[derive(Serialize)]
-pub struct TokenRespone {
+pub struct TokenResponse {
     pub token: String,
 }

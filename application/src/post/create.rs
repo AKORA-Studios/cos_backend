@@ -12,7 +12,7 @@ pub async fn create_post(
     pool: &PgPool,
     user_id: i32,
     post: NewPost,
-) -> TaskResult<PostResponse, String> {
+) -> TaskResult<PostResponse<Post>, String> {
     let post = InsertablePost {
         user_id,
         caption: post.caption,

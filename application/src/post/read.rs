@@ -1,73 +1,83 @@
 // application/src/post/read.rs
 
-use std::time::{Duration, SystemTime};
-
-use diesel::prelude::*;
-use domain::{
-    models::{FullPost, JoinedPostWithUser, POST_WITH_USER_COLUMNS},
-    schema::posts::all_columns,
+use domain::models::{
+    FullJoinedPostWithCounts, FullPost, JoinedPostWithUser, POST_WITH_USER_COLUMNS,
 };
+use sqlx::PgPool;
 
-use rocket::response::status::NotFound;
-
-use crate::util::map_diesel_result;
+use crate::{map_sqlx_result, TaskResult};
 
 // !TODO Also return users if they already liked a post or not
 
-pub async fn view_post(pool: &PgPool, post_id: i32) -> Result<FullPost, NotFound<String>> {
-    use domain::schema::posts::dsl::*;
+pub async fn view_post(pool: &PgPool, post_id: i32) -> TaskResult<FullPost, String> {
+    let sql = format!(
+        r#"
+        SELECT {}, 
+        (SELECT COUNT(*) FROM post_downloads WHERE post_id = $1) AS download_count,
+        (SELECT COUNT(*) FROM post_likes WHERE post_id = $1) AS like_count,
+        (SELECT COUNT(*) FROM post_depicted_people WHERE post_id = $1) AS people_count
 
-    let result = posts
-        .find(post_id)
-        .inner_join(users::table.on(users::id.eq(user_id)))
-        .select(POST_WITH_USER_COLUMNS)
-        .first::<JoinedPostWithUser>(db_conn);
+        FROM posts INNER JOIN users ON posts.user_id = users.id
 
-    map_diesel_result(match result {
-        Ok(found_post) => {
-            let info_result = get_post_info(&found_post, db_conn);
+        WHERE posts.id = $1
+        "#,
+        POST_WITH_USER_COLUMNS
+    );
 
-            match info_result {
-                Ok((downloads, likes, depicted_people)) => {
-                    Ok(found_post.convert(downloads, likes, depicted_people))
-                }
-                Err(e) => Err(e),
-            }
-        }
-        Err(e) => Err(e),
-    })
+    /*
+    SELECT posts.id,
+    posts.caption,
+    posts.description,
+    posts.user_id,
+    posts.tags,
+    posts.photographer_id,
+    posts.lat,
+    posts.lon,
+    posts.created_at,
+    users.username,
+    users.nickname,
+       (SELECT COUNT(*) FROM post_downloads WHERE post_id = 2) AS download_count,
+       (SELECT COUNT(*) FROM post_likes WHERE post_id = 2) AS like_count,
+       (SELECT COUNT(*) FROM post_depicted_people WHERE post_id = 2) AS people_count
+
+       FROM posts INNER JOIN users ON posts.user_id = users.id
+       WHERE posts.id = 2;
+
+    */
+
+    let result = sqlx::query_as::<_, FullJoinedPostWithCounts>(&sql)
+        .bind(post_id)
+        .fetch_one(pool)
+        .await;
+
+    map_sqlx_result(result.map(|p| p.convert(p.download_count, p.like_count, p.people_count)))
 }
 
-pub async fn list_recent_posts(pool: &PgPool, limit: usize) -> Vec<FullPost> {
-    use domain::schema::posts::dsl::*;
+pub async fn list_recent_posts(
+    pool: &PgPool,
+    limit: i64,
+) -> TaskResult<Vec<JoinedPostWithUser>, String> {
+    let sql = format!(
+        r#"SELECT {POST_WITH_USER_COLUMNS}
+            FROM posts INNER JOIN users ON posts.user_id = users.id
+            ORDER BY posts.created_at DESC
+            LIMIT $1
+            "#
+    );
 
-    let result = posts
-        .order(created_at.desc())
-        .limit(limit as i64)
-        .inner_join(users::table.on(users::id.eq(user_id)))
-        .select(POST_WITH_USER_COLUMNS)
-        .load::<JoinedPostWithUser>(db_conn);
+    let result = sqlx::query_as::<_, JoinedPostWithUser>(&sql)
+        .bind(limit)
+        .fetch_all(pool)
+        .await;
 
-    sql::query("SELECT * FROM posts JOIN users ON users.id = posts.post_id WITH LIMIT = $1 ORDER posts.created_at DESC");
-
-    match result {
-        Ok(post_list) => post_list
-            .iter()
-            .map(|post: &JoinedPostWithUser| {
-                let (downloads, likes, depicted_people) = get_post_info(post, db_conn).unwrap();
-
-                post.convert(downloads, likes, depicted_people)
-            })
-            .collect(),
-        Err(err) => match err {
-            _ => {
-                panic!("Database error - {}", err);
-            }
-        },
-    }
+    map_sqlx_result(result)
 }
 
-pub async fn list_today_posts(pool: &PgPool, limit: usize) -> Vec<FullPost> {
+/*
+pub async fn list_today_posts(
+    pool: &PgPool,
+    limit: usize,
+) -> TaskResult<Vec<JoinedPostWithUser>, String> {
     use domain::schema::posts::dsl::*;
 
     let result = posts
@@ -78,62 +88,47 @@ pub async fn list_today_posts(pool: &PgPool, limit: usize) -> Vec<FullPost> {
         .select(POST_WITH_USER_COLUMNS)
         .load::<JoinedPostWithUser>(db_conn);
 
-    match result {
-        Ok(post_list) => post_list
-            .iter()
-            .map(|post: &JoinedPostWithUser| {
-                let (downloads, likes, depicted_people) = get_post_info(post, db_conn).unwrap();
+    let sql = format!(
+        r#"SELECT {POST_WITH_USER_COLUMNS}
+                FROM posts INNER JOIN users ON posts.user_id = users.id
+                ORDER BY posts.created_at DESC
+                LIMIT $1
+                "#
+    );
 
-                post.convert(downloads, likes, depicted_people)
-            })
-            .collect(),
-        Err(err) => match err {
-            _ => {
-                panic!("Database error - {}", err);
-            }
-        },
-    }
+    let result = sqlx::query_as::<_, JoinedPostWithUser>(&sql)
+        .bind(limit)
+        .fetch_all(pool)
+        .await;
+
+    map_sqlx_result(result)
 }
+ */
 
-pub async fn list_user_posts(pool: &PgPool, user_id: i32, limit: usize) -> Vec<FullPost> {
-    let result = posts::table
-        .select(all_columns)
-        .filter(posts::user_id.eq(user_id))
-        .limit(limit as i64)
-        .inner_join(users::table.on(users::id.eq(user_id)))
-        .select(POST_WITH_USER_COLUMNS)
-        .load::<JoinedPostWithUser>(db_conn);
+pub async fn list_user_posts(
+    pool: &PgPool,
+    user_id: i32,
+    limit: i64,
+) -> TaskResult<Vec<JoinedPostWithUser>, String> {
+    let sql = format!(
+        r#"SELECT {POST_WITH_USER_COLUMNS}
+                FROM posts INNER JOIN users ON posts.user_id = users.id
+                WHERE posts.user_id = $1
+                ORDER BY posts.created_at DESC
+                LIMIT $2
+                "#
+    );
 
-    match result {
-        Ok(post_list) => post_list
-            .iter()
-            .map(|post: &JoinedPostWithUser| {
-                let (downloads, likes, depicted_people) = get_post_info(post, db_conn).unwrap();
+    let result = sqlx::query_as::<_, JoinedPostWithUser>(&sql)
+        .bind(user_id)
+        .bind(limit)
+        .fetch_all(pool)
+        .await;
 
-                post.convert(downloads, likes, depicted_people)
-            })
-            .collect(),
-        Err(err) => match err {
-            _ => {
-                panic!("Database error - {}", err);
-            }
-        },
-    }
+    map_sqlx_result(result)
 }
 
 /*
-
-
-
-
-
-
-
-
-
-
-
-*/
 
 fn get_post_info(
     post: &JoinedPostWithUser,
@@ -143,6 +138,8 @@ fn get_post_info(
         .filter(post_downloads::post_id.eq(post.id))
         .count()
         .get_result(conn)?;
+
+    "SELECT COUNT(*) FROM post_downloads WHERE post_id = $1";
 
     let likes: i64 = post_likes::table
         .filter(post_likes::post_id.eq(post.id))
@@ -156,3 +153,4 @@ fn get_post_info(
 
     Ok((downloads, likes, depicted_people))
 }
+*/

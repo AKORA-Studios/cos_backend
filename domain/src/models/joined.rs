@@ -2,7 +2,7 @@ use chrono::{DateTime, Local};
 
 use serde::Serialize;
 
-#[derive(sqlx::FromRow, Debug)]
+#[derive(sqlx::FromRow, Debug, Serialize)]
 pub struct JoinedPostWithUser {
     pub id: i32,
     pub caption: Option<String>,
@@ -18,8 +18,28 @@ pub struct JoinedPostWithUser {
     pub nickname: String,
 }
 
-impl JoinedPostWithUser {
-    pub fn convert(&self, downloads: i64, likes: i64, depicted_people: Vec<i32>) -> FullPost {
+#[derive(sqlx::FromRow, Debug, Serialize)]
+pub struct FullJoinedPostWithCounts {
+    pub id: i32,
+    pub caption: Option<String>,
+    pub description: Option<String>,
+    pub user_id: i32,
+    pub tags: Vec<Option<String>>,
+    pub photographer_id: Option<i32>,
+    pub lat: Option<f64>,
+    pub lon: Option<f64>,
+    pub created_at: DateTime<Local>,
+
+    pub username: String,
+    pub nickname: String,
+
+    pub download_count: i64,
+    pub like_count: i64,
+    pub people_count: i64,
+}
+
+impl FullJoinedPostWithCounts {
+    pub fn convert(&self, downloads: i64, likes: i64, depicted_people: i64) -> FullPost {
         FullPost {
             id: self.id,
             user: PostUserInfo {
@@ -35,9 +55,9 @@ impl JoinedPostWithUser {
             lon: self.lon,
             created_at: self.created_at,
 
-            downloads,
-            likes,
-            depicted_people,
+            download_count: downloads,
+            like_count: likes,
+            people_count: depicted_people,
         }
     }
 }
@@ -54,9 +74,10 @@ pub struct FullPost {
     pub lon: Option<f64>,
     pub created_at: DateTime<Local>,
 
-    pub downloads: i64,
-    pub likes: i64,
-    pub depicted_people: Vec<i32>,
+    pub download_count: i64,
+    pub like_count: i64,
+    pub people_count: i64,
+    //pub depicted_people: Vec<i32>,
 }
 
 #[derive(Serialize, Debug)]
@@ -68,30 +89,30 @@ pub struct PostUserInfo {
 
 /*
 type PostWithUserColumns = (
-    posts::id,
-    posts::caption,
-    posts::description,
-    posts::user_id,
-    posts::tags,
-    posts::photographer_id,
-    posts::lat,
-    posts::lon,
-    posts::created_at,
-    users::username,
-    users::nickname,
-);
-
-pub const POST_WITH_USER_COLUMNS: PostWithUserColumns = (
-    posts::id,
-    posts::caption,
-    posts::description,
-    posts::user_id,
-    posts::tags,
-    posts::photographer_id,
-    posts::lat,
-    posts::lon,
-    posts::created_at,
-    users::username,
-    users::nickname,
+    posts.id,
+    posts.caption,
+    posts.description,
+    posts.user_id,
+    posts.tags,
+    posts.photographer_id,
+    posts.lat,
+    posts.lon,
+    posts.created_at,
+    users.username,
+    users.nickname,
 );
 */
+
+pub const POST_WITH_USER_COLUMNS: &'static str = r#"
+    posts.id,
+    posts.caption,
+    posts.description,
+    posts.user_id,
+    posts.tags,
+    posts.photographer_id,
+    posts.lat,
+    posts.lon,
+    posts.created_at,
+    users.username,
+    users.nickname
+"#;

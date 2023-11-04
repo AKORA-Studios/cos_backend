@@ -1,141 +1,149 @@
 // api/src/post_handler.rs
 
-use application::auth::JWTClaims;
-use application::post::{comment, create, interact, read};
-use infrastructure::DbConn;
-use rocket::response::status::{Created, NotFound};
-use rocket::serde::json::Json;
-use rocket::{delete, get, post, put};
+use application::post::*;
+use application::{OpResult, OpSuc};
+use axum::extract::{Path, State};
+use axum::Json;
+use domain::models::{FullPost, JoinedPostWithUser, Post};
+use shared::response_models::{CommentResponse, PostResponse, PostsResponse};
+use sqlx::postgres::PgPool;
+
 use shared::request_models::{NewComment, NewPost};
-use shared::response_models::{CommentsRespone, FullPostResponse, FullPostsResponse};
+use shared::response_models::CommentsResponse;
 
-#[post("/posts/new", format = "application/json", data = "<post>")]
+use crate::extractors::auth::Claims;
+use crate::extractors::limit::Limit;
+
+/// POST /posts/new   <post>
 pub async fn create_post_handler(
-    conn: DbConn,
-    user: JWTClaims,
-    post: Json<NewPost>,
-) -> Created<String> {
-    create::create_post(&pool, user.user_id, post))
+    State(pool): State<PgPool>,
+    Claims(claims): Claims,
+    Json(post): Json<NewPost>,
+) -> OpResult<PostResponse<Post>, String> {
+    create::create_post(&pool, claims.user_id, post)
         .await
+        .map(|p| OpSuc::Created(p))
 }
 
-#[get("/posts/<post_id>")]
-pub async fn view_post_handler(conn: DbConn, post_id: i32) -> Result<String, NotFound<String>> {
-    let post = read::view_post(&pool, post_id)).await?;
-    let response = FullPostResponse { post };
+/// get /posts/<post_id>
+pub async fn view_post_handler(
+    State(pool): State<PgPool>,
+    Path(post_id): Path<i32>,
+) -> OpResult<PostResponse<FullPost>, String> {
+    let post = read::view_post(&pool, post_id).await?;
+    let response = PostResponse { post };
 
-    Ok(serde_json::to_string(&response).unwrap())
+    Ok(OpSuc::Read(response))
 }
 
-#[delete("/posts/<post_id>")]
+/// delete /posts/<post_id>
 pub async fn delete_post_handler(
-    conn: DbConn,
-    user: JWTClaims,
-    post_id: i32,
+    State(pool): State<PgPool>,
+    Claims(claims): Claims,
+    Path(post_id): Path<i32>,
 ) -> OpResult<(), String> {
-    interact::delete_post(&pool, user.user_id, post_id))
+    interact::delete_post(&pool, claims.user_id, post_id)
         .await
+        .map(|_| OpSuc::Deleted(()))
 }
 
-#[put("/posts/<post_id>/like")]
+/// put /posts/<post_id>/like
 pub async fn like_post_handler(
-    conn: DbConn,
-    user: JWTClaims,
-    post_id: i32,
+    State(pool): State<PgPool>,
+    Claims(claims): Claims,
+    Path(post_id): Path<i32>,
 ) -> OpResult<(), String> {
-    interact::like_post(&pool, user.user_id, post_id))
+    interact::like_post(&pool, claims.user_id, post_id)
         .await
+        .map(|_| OpSuc::Created(()))
 }
 
-#[put("/posts/<post_id>/dislike")]
+/// put /posts/<post_id>/dislike
 pub async fn dislike_post_handler(
-    conn: DbConn,
-    user: JWTClaims,
-    post_id: i32,
+    State(pool): State<PgPool>,
+    Claims(claims): Claims,
+    Path(post_id): Path<i32>,
 ) -> OpResult<(), String> {
-    interact::dislike_post(&pool, user.user_id, post_id))
+    interact::dislike_post(&pool, claims.user_id, post_id)
         .await
+        .map(|_| OpSuc::Deleted(()))
 }
 
-#[put("/posts/<post_id>/download")]
+/// put /posts/<post_id>/download
 pub async fn download_post_handler(
-    conn: DbConn,
-    user: JWTClaims,
-    post_id: i32,
+    State(pool): State<PgPool>,
+    Claims(claims): Claims,
+    Path(post_id): Path<i32>,
 ) -> OpResult<(), String> {
-    interact::download_post(&pool, user.user_id, post_id))
+    interact::download_post(&pool, claims.user_id, post_id)
         .await
+        .map(|_| OpSuc::Created(()))
 }
 
 // !TODO use post_id in url
-#[post(
-    "/posts/<post_id>/comments/new",
-    format = "application/json",
-    data = "<comment>"
-)]
+/// POST /posts/<post_id>/comments/new     <comment>
 pub async fn create_comment_handler(
-    conn: DbConn,
-    user: JWTClaims,
-    post_id: i32,
-    comment: Json<NewComment>,
-) -> Created<String> {
-    comment::create_post_comment(&pool, user.user_id, post_id, comment))
+    State(pool): State<PgPool>,
+    Claims(claims): Claims,
+    Path(post_id): Path<i32>,
+    Json(comment): Json<NewComment>,
+) -> OpResult<CommentResponse, String> {
+    comment::create_post_comment(&pool, claims.user_id, post_id, comment)
         .await
+        .map(|c| OpSuc::Created(c))
 }
 
-#[get("/posts/<post_id>/comments/recent?<limit>")]
+/// get /posts/<post_id>/comments/recent?<limit>
 pub async fn list_recent_comments_handler(
-    conn: DbConn,
-    post_id: i32,
-    limit: Option<usize>,
-) -> Result<String, NotFound<String>> {
+    State(pool): State<PgPool>,
+    Path(post_id): Path<i32>,
+    Limit(limit): Limit,
+) -> OpResult<CommentsResponse, String> {
     let limit = limit.unwrap_or(25);
-    let comments = conn
-        .run(move |c| comment::list_recent_comments(&pool, post_id, limit))
-        .await;
+    let comments = comment::list_recent_comments(&pool, post_id, limit).await?;
 
-    let response = CommentsRespone { comments };
+    let response = CommentsResponse { comments };
 
-    Ok(serde_json::to_string(&response).unwrap())
+    Ok(OpSuc::Read(response))
 }
 
-#[get("/posts/today?<limit>")]
+/*
+/// get /posts/today?<limit>
 pub async fn list_today_posts_handler(
-    conn: DbConn,
-    limit: Option<usize>,
-) -> Result<String, NotFound<String>> {
+    State(pool): State<PgPool>,
+    Query(limit): Query<Option<i64>>,
+) -> OpResult<FullPostsResponse, String> {
     let limit = limit.unwrap_or(25);
-    let posts = read::list_today_posts(&pool, limit)).await;
+    let posts = read::list_today_posts(&pool, limit).await;
 
     let response = FullPostsResponse { posts };
 
-    Ok(serde_json::to_string(&response).unwrap())
+    Ok(OpSuc::Read(response))
 }
+*/
 
-#[get("/posts/recent?<limit>")]
+/// get /posts/recent?<limit>
 pub async fn list_recent_posts_handler(
-    conn: DbConn,
-    limit: Option<usize>,
-) -> Result<String, NotFound<String>> {
+    State(pool): State<PgPool>,
+    Limit(limit): Limit,
+) -> OpResult<PostsResponse<JoinedPostWithUser>, String> {
     let limit = limit.unwrap_or(25);
-    let posts = read::list_recent_posts(&pool, limit)).await;
+    let posts = read::list_recent_posts(&pool, limit).await?;
 
-    let response = FullPostsResponse { posts };
+    let response = PostsResponse { posts };
 
-    Ok(serde_json::to_string(&response).unwrap())
+    Ok(OpSuc::Read(response))
 }
 
-#[get("/users/<user_id>/posts?<limit>")]
+/// get /users/<user_id>/posts?<limit>
 pub async fn list_user_posts_handler(
-    conn: DbConn,
-    user_id: i32,
-    limit: Option<usize>,
-) -> Result<String, NotFound<String>> {
+    State(pool): State<PgPool>,
+    Path(user_id): Path<i32>,
+    Limit(limit): Limit,
+) -> OpResult<PostsResponse<JoinedPostWithUser>, String> {
     let limit = limit.unwrap_or(25);
-    let posts = conn
-        .run(move |c| read::list_user_posts(&pool, user_id, limit))
-        .await;
-    let response = FullPostsResponse { posts };
+    let posts = read::list_user_posts(&pool, user_id, limit).await?;
+    let response = PostsResponse { posts };
 
-    Ok(serde_json::to_string(&response).unwrap())
+    Ok(OpSuc::Read(response))
 }

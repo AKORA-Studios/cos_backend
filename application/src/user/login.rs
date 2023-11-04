@@ -5,7 +5,7 @@ use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use serde::Serialize;
 use shared::{
     request_models::LoginCredentials,
-    response_models::{ErrorMessageResponse, TokenRespone},
+    response_models::{ErrorMessageResponse, TokenResponse},
 };
 use sqlx::PgPool;
 use std::time::{Duration, SystemTime};
@@ -51,7 +51,7 @@ pub async fn fetch_user_with_credentials(
     (password, map_sqlx_result(user))
 }
 
-pub async fn authorize_user(password: &str, user: User) -> TaskResult<TokenRespone, String> {
+pub async fn authorize_user(password: &str, user: User) -> TaskResult<TokenResponse, String> {
     match PasswordHash::new(&user.password_hash) {
         Ok(parsed_hash) => {
             match Argon2::default().verify_password(password.as_bytes(), &parsed_hash) {
@@ -79,7 +79,7 @@ pub async fn authorize_user(password: &str, user: User) -> TaskResult<TokenRespo
 
                     match auth::create_token(claims) {
                         Ok(token) => {
-                            let response = TokenRespone { token };
+                            let response = TokenResponse { token };
 
                             Ok(response)
                         }

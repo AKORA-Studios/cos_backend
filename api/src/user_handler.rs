@@ -10,7 +10,7 @@ use shared::request_models::RegisterUser;
 use shared::response_models::UserResponse;
 use sqlx::postgres::PgPool;
 
-use crate::auth::Claims;
+use crate::extractors::auth::Claims;
 
 pub async fn status() -> StatusCode {
     StatusCode::OK

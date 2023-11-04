@@ -1,4 +1,4 @@
-use api::auth::login_user_handler;
+use api::extractors::auth::login_user_handler;
 // api/src/bin/main.rs
 use dotenvy::dotenv;
 use std::{env, time::Duration};
@@ -9,7 +9,7 @@ use std::fs;
 
 use axum::{
     http::StatusCode,
-    routing::{get, patch, post, put},
+    routing::{delete, get, patch, post, put},
     Router,
 };
 use std::net::SocketAddr;
@@ -47,6 +47,7 @@ async fn main() {
         panic!("Error while running migrations: {e}")
     }
 
+    use api::post_handler::*;
     use api::user_handler::*;
 
     // build our application with a route
@@ -62,7 +63,21 @@ async fn main() {
                 .route("/users/:user_id/block", put(block_user_handler))
                 .route("/users/:user_id/unblock", put(unblock_user_handler))
                 .route("/users/me", get(view_me_handler))
-                .route("/users/me", patch(patch_me_handler)),
+                .route("/users/me", patch(patch_me_handler))
+                .route("/posts/new", post(create_post_handler))
+                .route("/posts/:post_id", post(unblock_user_handler))
+                .route("/posts/:post_id", get(view_post_handler))
+                .route("/posts/:post_id", delete(delete_post_handler))
+                .route("/posts/:post_id/like", put(like_post_handler))
+                .route("/posts/:post_id/dislike", put(dislike_post_handler))
+                .route("/posts/:post_id/download", put(download_post_handler))
+                .route("/posts/:post_id/comments/new", post(create_comment_handler))
+                .route(
+                    "/posts/:post_id/comments/recent", //?limit",
+                    get(list_recent_comments_handler),
+                )
+                .route("/posts/recent", get(list_recent_posts_handler))
+                .route("/users/:user_id/posts", get(list_user_posts_handler)),
         )
         .fallback(fallback_handler)
         .with_state(pool);

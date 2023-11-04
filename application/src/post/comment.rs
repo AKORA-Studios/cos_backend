@@ -7,14 +7,14 @@ use sqlx::PgPool;
 use crate::{map_sqlx_result, TaskResult};
 
 use shared::request_models::NewComment;
-use shared::response_models::CommentRespone;
+use shared::response_models::CommentResponse;
 
 pub async fn create_post_comment(
     pool: &PgPool,
     user_id: i32,
     post_id: i32,
     comment: NewComment,
-) -> TaskResult<CommentRespone, String> {
+) -> TaskResult<CommentResponse, String> {
     let result = sqlx::query_as::<_, Comment>(
         r#"
         INSERT INTO comments
@@ -30,7 +30,7 @@ pub async fn create_post_comment(
     .fetch_one(pool)
     .await;
 
-    map_sqlx_result(result.map(|c| CommentRespone { comment: c }))
+    map_sqlx_result(result.map(|c| CommentResponse { comment: c }))
 }
 
 pub async fn list_recent_comments(

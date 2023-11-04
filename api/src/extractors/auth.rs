@@ -15,7 +15,7 @@ use axum::{
 };
 use serde::Serialize;
 use serde_json::json;
-use shared::{request_models::LoginCredentials, response_models::TokenRespone};
+use shared::{request_models::LoginCredentials, response_models::TokenResponse};
 use sqlx::PgPool;
 
 #[derive(Debug, Serialize)]
@@ -35,7 +35,7 @@ pub enum AuthError {
 pub async fn login_user_handler(
     State(pool): State<PgPool>,
     Json(credentials): Json<LoginCredentials>,
-) -> OpResult<TokenRespone, String> {
+) -> OpResult<TokenResponse, String> {
     let (password, user) = login::fetch_user_with_credentials(&pool, credentials).await;
 
     login::authorize_user(&password, user?)
