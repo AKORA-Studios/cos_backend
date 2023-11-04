@@ -16,7 +16,7 @@ pub async fn create_message(
 ) -> TaskResult<MessageResponse, String> {
     let result = sqlx::query_as::<_, Message>(
         r#"
-        INSERT INTO posts
+        INSERT INTO messages
         (content, attachment_id, reply_to, from_id, to_id)
         VALUES ($1, $2, $3, $4, $5)
         RETURNING *
@@ -24,7 +24,6 @@ pub async fn create_message(
     )
     .bind(msg.content)
     .bind(msg.attachment_id)
-    .bind(msg.reply_to)
     .bind(msg.reply_to)
     .bind(from_user_id)
     .bind(to_user_id)

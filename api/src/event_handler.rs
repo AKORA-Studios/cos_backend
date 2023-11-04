@@ -1,22 +1,33 @@
 // api/src/post_handler.rs
 
-use application::event::{create, read};
+use application::{
+    event::{create, read},
+    OpResult, OpSuc,
+};
+use axum::{
+    extract::{Path, State},
+    Json,
+};
 use domain::models::NewEvent;
-use infrastructure::DbConn;
-use rocket::response::status::{Created, NotFound};
-use rocket::serde::json::Json;
-use rocket::{get, post};
-use shared::response_models::EventRespone;
+use shared::response_models::EventResponse;
+use sqlx::PgPool;
 
-#[post("/events/new", format = "application/json", data = "<event>")]
-pub async fn create_event_handler(conn: DbConn, event: Json<NewEvent>) -> Created<String> {
-    create::create_event(&pool, event)).await
+/// POST /events/new        <event>
+pub async fn create_event_handler(
+    State(pool): State<PgPool>,
+    Json(event): Json<NewEvent>,
+) -> OpResult<EventResponse, String> {
+    create::create_event(&pool, event)
+        .await
+        .map(|e| OpSuc::Created(e))
 }
 
-#[get("/events/<event_id>")]
-pub async fn view_event_handler(conn: DbConn, event_id: i32) -> Result<String, NotFound<String>> {
-    let event = read::view_event(&pool, event_id)).await?;
-    let response = EventRespone { event };
-
-    Ok(serde_json::to_string(&response).unwrap())
+/// get /events/<event_id>
+pub async fn view_event_handler(
+    State(pool): State<PgPool>,
+    Path(event_id): Path<i32>,
+) -> OpResult<EventResponse, String> {
+    read::view_event(&pool, event_id)
+        .await
+        .map(|e| OpSuc::Read(e))
 }

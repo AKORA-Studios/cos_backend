@@ -2,11 +2,16 @@
 
 use std::path::PathBuf;
 
-use application::auth::JWTClaims;
-use rocket::data::ByteUnit;
-use rocket::http::Status;
-use rocket::tokio::fs::File;
-use rocket::{get, put, Data};
+use axum::{
+    body::StreamBody,
+    http::{header, StatusCode},
+    response::IntoResponse,
+    response::Response,
+};
+
+use tokio::fs::File;
+
+use tokio_util::io::ReaderStream;
 
 const UPLOAD_DIR: &'static str = concat!(env!("CARGO_MANIFEST_DIR"), "/../images");
 
@@ -18,33 +23,53 @@ fn post_picture_path(post_id: i32, image: u32) -> PathBuf {
     PathBuf::from(format!("{UPLOAD_DIR}/posts/{post_id}/{image}"))
 }
 
-// Handle user images
-#[put("/users/<user_id>", data = "<image>")]
+/// Update user image
+/// PUT /users/me       <image>
+/*
 pub async fn upload_profile_picture_handler(
-    user: JWTClaims,
-    user_id: i32,
-    image: Data<'_>,
-) -> std::io::Result<Status> {
-    if user.user_id != user_id {
-        return Ok(Status::Forbidden);
+    Claims(claims): Claims,
+    mut stream: BodyStream,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let path = profile_picture_path(claims.user_id);
+    let mut file = File::open(path).await?;
+
+    while let Some(chunk) = stream.next().await {
+        let chunk = chunk?;
+        file.write_all(&chunk).await?;
     }
 
-    image
-        .open(ByteUnit::Megabyte(10))
-        .into_file(profile_picture_path(user_id))
-        .await?;
-
-    Ok(Status::Ok)
+    Ok(())
 }
+*/
 
-#[get("/users/<user_id>")]
-pub async fn retrieve_profile_picture_handler(user_id: i32) -> Option<File> {
+/// get /users/<user_id>/image
+pub async fn retrieve_profile_picture_handler(user_id: i32) -> Response {
     let filename = profile_picture_path(user_id);
-    File::open(&filename).await.ok()
+    let file = if let Ok(f) = File::open(&filename).await {
+        f
+    } else {
+        return (StatusCode::INTERNAL_SERVER_ERROR, "mhm").into_response();
+    };
+
+    // convert the `AsyncRead` into a `Stream`
+    let stream = ReaderStream::new(file);
+    // convert the `Stream` into an `axum::body::HttpBody`
+    let body = StreamBody::new(stream);
+
+    let headers = [
+        (header::CONTENT_TYPE, "image/png"),
+        (
+            header::CONTENT_DISPOSITION,
+            &format!("attachment; filename=\"{user_id}.png\""),
+        ),
+    ];
+
+    (headers, body).into_response()
 }
 
-// Handle post images
-#[put("/posts/<_post_id>/<_image_count>", data = "<_image>")]
+/// Handle post images
+/// PUT /posts/:post_id>/:image_count        <image>
+/*
 pub async fn upload_post_picture_handler(
     _user: JWTClaims,
     _post_id: i32,
@@ -55,8 +80,9 @@ pub async fn upload_post_picture_handler(
 
     return Ok(Status::Forbidden);
 }
+*/
 
-#[get("/users/<post_id>/<image_count>")]
+/// get /users/<post_id>/<image_count>
 pub async fn retrieve_post_picture_handler(post_id: i32, image_count: u32) -> Option<File> {
     let filename = post_picture_path(post_id, image_count);
     File::open(&filename).await.ok()

@@ -47,10 +47,42 @@ async fn main() {
         panic!("Error while running migrations: {e}")
     }
 
+    use api::event_handler::*;
+    use api::message_handler::*;
     use api::post_handler::*;
     use api::user_handler::*;
 
     // build our application with a route
+    let user_router = Router::new()
+        .route("/users/:user_id/posts", get(list_user_posts_handler))
+        .route("/users/:user_id/follow", put(follow_user_handler))
+        .route("/users/:user_id/unfollow", put(unfollow_user_handler))
+        .route("/users/:user_id/block", put(block_user_handler))
+        .route("/users/:user_id/unblock", put(unblock_user_handler))
+        .route("/users/me", get(view_me_handler))
+        .route("/users/me", patch(patch_me_handler));
+
+    let post_router = Router::new()
+        .route("/posts/new", post(create_post_handler))
+        .route("/posts/:post_id", get(view_post_handler))
+        .route("/posts/:post_id", delete(delete_post_handler))
+        .route("/posts/:post_id/like", put(like_post_handler))
+        .route("/posts/:post_id/dislike", put(dislike_post_handler))
+        .route("/posts/:post_id/download", put(download_post_handler))
+        .route("/posts/:post_id/comments/new", post(create_comment_handler))
+        .route(
+            "/posts/:post_id/comments/recent", //?limit",
+            get(list_recent_comments_handler),
+        )
+        .route("/posts/recent", get(list_recent_posts_handler));
+
+    let event_router = Router::new()
+        .route("/events/new", post(create_event_handler))
+        .route("/events/:event_id", get(view_event_handler));
+
+    let message_router = Router::new()
+        .route("/users/:user_id/messages/new", post(create_message_handler))
+        .route("/users/:user_id/messages", get(list_conversation_handler));
     let app = Router::new()
         .route("/", get(status_handler))
         .nest(
@@ -58,26 +90,10 @@ async fn main() {
             Router::new()
                 .route("/login", post(login_user_handler))
                 .route("/register", post(register_user_handler))
-                .route("/users/:user_id/follow", put(follow_user_handler))
-                .route("/users/:user_id/unfollow", put(unfollow_user_handler))
-                .route("/users/:user_id/block", put(block_user_handler))
-                .route("/users/:user_id/unblock", put(unblock_user_handler))
-                .route("/users/me", get(view_me_handler))
-                .route("/users/me", patch(patch_me_handler))
-                .route("/posts/new", post(create_post_handler))
-                .route("/posts/:post_id", post(unblock_user_handler))
-                .route("/posts/:post_id", get(view_post_handler))
-                .route("/posts/:post_id", delete(delete_post_handler))
-                .route("/posts/:post_id/like", put(like_post_handler))
-                .route("/posts/:post_id/dislike", put(dislike_post_handler))
-                .route("/posts/:post_id/download", put(download_post_handler))
-                .route("/posts/:post_id/comments/new", post(create_comment_handler))
-                .route(
-                    "/posts/:post_id/comments/recent", //?limit",
-                    get(list_recent_comments_handler),
-                )
-                .route("/posts/recent", get(list_recent_posts_handler))
-                .route("/users/:user_id/posts", get(list_user_posts_handler)),
+                .merge(user_router)
+                .merge(post_router)
+                .merge(event_router)
+                .merge(message_router),
         )
         .fallback(fallback_handler)
         .with_state(pool);

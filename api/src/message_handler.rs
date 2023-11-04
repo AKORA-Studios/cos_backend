@@ -1,42 +1,40 @@
 // api/src/post_handler.rs
 
-use application::auth::JWTClaims;
 use application::message::{create, read};
-use infrastructure::DbConn;
-use rocket::response::status::{Created, NotFound};
-use rocket::serde::json::Json;
-use rocket::{get, post};
-use shared::request_models::NewMessage;
-use shared::response_models::MessagesResponse;
+use application::{OpResult, OpSuc};
+use axum::extract::{Path, State};
+use axum::Json;
 
-#[post(
-    "/users/<to_user_id>/messages/new",
-    format = "application/json",
-    data = "<msg>"
-)]
+use shared::request_models::NewMessage;
+use shared::response_models::{MessageResponse, MessagesResponse};
+use sqlx::PgPool;
+
+use crate::extractors::auth::Claims;
+use crate::extractors::limit::Limit;
+
+/// POST /users/<to_user_id>/messages/new       <msg>
 pub async fn create_message_handler(
-    conn: DbConn,
-    user: JWTClaims,
-    to_user_id: i32,
-    msg: Json<NewMessage>,
-) -> Created<String> {
-    create::create_message(&pool, user, to_user_id, msg))
+    State(pool): State<PgPool>,
+    Claims(claims): Claims,
+    Path(user_id): Path<i32>,
+    Json(msg): Json<NewMessage>,
+) -> OpResult<MessageResponse, String> {
+    create::create_message(&pool, claims.user_id, user_id, msg)
         .await
+        .map(|m| OpSuc::Created(m))
 }
 
-#[get("/users/<user_id>/messages?<limit>")]
+/// get /users/<user_id>/messages?<limit>
 pub async fn list_conversation_handler(
-    conn: DbConn,
-    req_user: JWTClaims,
-    user_id: i32,
-    limit: Option<u32>,
-) -> Result<String, NotFound<String>> {
-    let limit = limit.unwrap_or(20).clamp(1, 100);
+    State(pool): State<PgPool>,
+    Claims(claims): Claims,
+    Path(user_id): Path<i32>,
+    Limit(limit): Limit,
+) -> OpResult<MessagesResponse, String> {
+    let limit = limit.unwrap_or(20);
 
-    let messages = conn
-        .run(move |c| read::list_messages(&pool, req_user.user_id, user_id, limit))
-        .await?;
+    let messages = read::list_messages(&pool, claims.user_id, user_id, limit).await?;
     let response = MessagesResponse { messages };
 
-    Ok(serde_json::to_string(&response).unwrap())
+    Ok(OpSuc::Read(response))
 }
