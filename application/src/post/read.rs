@@ -55,7 +55,7 @@ pub async fn view_post(pool: &PgPool, post_id: i32) -> TaskResult<FullPost, Stri
 
 pub async fn list_recent_posts(
     pool: &PgPool,
-    limit: i64,
+    limit: i32,
 ) -> TaskResult<Vec<JoinedPostWithUser>, String> {
     let sql = format!(
         r#"SELECT {POST_WITH_USER_COLUMNS}
@@ -108,7 +108,7 @@ pub async fn list_today_posts(
 pub async fn list_user_posts(
     pool: &PgPool,
     user_id: i32,
-    limit: i64,
+    limit: i32,
 ) -> TaskResult<Vec<JoinedPostWithUser>, String> {
     let sql = format!(
         r#"SELECT {POST_WITH_USER_COLUMNS}

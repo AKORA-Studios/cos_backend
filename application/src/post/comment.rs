@@ -36,7 +36,7 @@ pub async fn create_post_comment(
 pub async fn list_recent_comments(
     pool: &PgPool,
     c_post_id: i32,
-    limit: i64,
+    limit: i32,
 ) -> TaskResult<Vec<Comment>, String> {
     let result = sqlx::query_as::<_, Comment>(
         r#"

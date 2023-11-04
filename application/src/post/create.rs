@@ -3,7 +3,7 @@
 use sqlx::PgPool;
 
 use crate::{map_sqlx_result, TaskResult};
-use domain::models::{InsertablePost, Post};
+use domain::models::Post;
 
 use shared::request_models::NewPost;
 use shared::response_models::PostResponse;
@@ -13,16 +13,6 @@ pub async fn create_post(
     user_id: i32,
     post: NewPost,
 ) -> TaskResult<PostResponse<Post>, String> {
-    let post = InsertablePost {
-        user_id,
-        caption: post.caption,
-        description: post.description,
-        tags: post.tags,
-        photographer_id: post.photographer_id,
-        lat: post.lat,
-        lon: post.lon,
-    };
-
     let result = sqlx::query_as::<_, Post>(
         r#"
         INSERT INTO posts

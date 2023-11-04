@@ -1,38 +1,39 @@
 // application/src/message/read.rs
 
-use diesel::prelude::*;
 use domain::models::Message;
 
-use rocket::response::status::NotFound;
+use sqlx::PgPool;
 
-use crate::util::map_diesel_result;
+use crate::{map_sqlx_result, TaskResult};
 
-pub async fn view_message(pool: &PgPool, message_id: i32) -> Result<Message, NotFound<String>> {
-    use domain::schema::messages::dsl::*;
+pub async fn view_message(pool: &PgPool, message_id: i32) -> TaskResult<Message, String> {
+    let result = sqlx::query_as::<_, Message>(r#"SELECT * FROM messages WHERE id = $1"#)
+        .bind(message_id)
+        .fetch_one(pool)
+        .await;
 
-    let result = messages.find(message_id).first::<Message>(db_conn);
-
-    map_diesel_result(result)
+    map_sqlx_result(result)
 }
 
 pub async fn list_messages(
     pool: &PgPool,
     user1_id: i32,
     user2_id: i32,
-    limit: u32,
-) -> Result<Vec<Message>, NotFound<String>> {
-    let filter1 = messages::from_id
-        .eq(user1_id)
-        .and(messages::to_id.eq(user2_id));
+    limit: i32,
+) -> TaskResult<Vec<Message>, String> {
+    let result = sqlx::query_as::<_, Message>(
+        r#"
+    SELECT * FROM messages
+    WHERE (from_id = $1 AND to_id = $2) OR (from_id = $2 AND to_id = $1)
+    ORDER BY created_at DESC
+    LIMIT $3
+    "#,
+    )
+    .bind(user1_id)
+    .bind(user2_id)
+    .bind(limit)
+    .fetch_all(pool)
+    .await;
 
-    let filter2 = messages::from_id
-        .eq(user2_id)
-        .and(messages::to_id.eq(user1_id));
-
-    let result = messages::table
-        .filter(filter1.or(filter2))
-        .limit(limit.into())
-        .load::<Message>(db_conn);
-
-    map_diesel_result(result)
+    map_sqlx_result(result)
 }

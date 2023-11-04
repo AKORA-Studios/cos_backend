@@ -7,11 +7,11 @@ use serde::Deserialize;
 
 #[derive(Deserialize)]
 struct QueryObject {
-    limit: Option<i64>,
+    limit: Option<i32>,
 }
 
 /// Extracts the often used `limit` query parameter and automatically limits it to the range of 0-50
-pub struct Limit(pub Option<i64>);
+pub struct Limit(pub Option<i32>);
 
 #[async_trait]
 impl<S> FromRequestParts<S> for Limit

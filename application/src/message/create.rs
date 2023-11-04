@@ -1,44 +1,35 @@
 // application/src/message/create.rs
 
-use diesel::prelude::*;
-use domain::models::{InsertableMessage, Message};
+use domain::models::Message;
 
-use rocket::response::status::Created;
-use rocket::serde::json::Json;
 use shared::request_models::NewMessage;
 use shared::response_models::MessageResponse;
+use sqlx::PgPool;
 
-use crate::auth::JWTClaims;
+use crate::{map_sqlx_result, TaskResult};
 
 pub async fn create_message(
     pool: &PgPool,
-    from_user: JWTClaims,
+    from_user_id: i32,
     to_user_id: i32,
-    msg: Json<NewMessage>,
-) -> Created<String> {
-    use domain::schema::messages::dsl::*;
+    msg: NewMessage,
+) -> TaskResult<MessageResponse, String> {
+    let result = sqlx::query_as::<_, Message>(
+        r#"
+        INSERT INTO posts
+        (content, attachment_id, reply_to, from_id, to_id)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING *
+    "#,
+    )
+    .bind(msg.content)
+    .bind(msg.attachment_id)
+    .bind(msg.reply_to)
+    .bind(msg.reply_to)
+    .bind(from_user_id)
+    .bind(to_user_id)
+    .fetch_one(pool)
+    .await;
 
-    let msg = msg.into_inner();
-    let msg = InsertableMessage {
-        attachment_id: msg.attachment_id,
-        content: msg.content,
-        from_id: from_user.user_id,
-        reply_to: msg.reply_to,
-        to_id: to_user_id,
-    };
-
-    match diesel::insert_into(messages)
-        .values(&msg)
-        .get_result::<Message>(db_conn)
-    {
-        Ok(message) => {
-            let response = MessageResponse { message };
-            Created::new("").tagged_body(serde_json::to_string(&response).unwrap())
-        }
-        Err(err) => match err {
-            _ => {
-                panic!("Database error - {}", err);
-            }
-        },
-    }
+    map_sqlx_result(result.map(|m| MessageResponse { message: m }))
 }
