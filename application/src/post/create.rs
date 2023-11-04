@@ -1,15 +1,18 @@
 // application/src/post/create.rs
 
-use diesel::prelude::*;
+use sqlx::PgPool;
+
+use crate::{map_sqlx_result, TaskResult};
 use domain::models::{InsertablePost, Post};
 
-use rocket::response::status::Created;
-use rocket::serde::json::Json;
 use shared::request_models::NewPost;
 use shared::response_models::PostResponse;
 
-pub async fn create_post(pool: &PgPool, user_id: i32, post: Json<NewPost>) -> Created<String> {
-    let post = post.into_inner();
+pub async fn create_post(
+    pool: &PgPool,
+    user_id: i32,
+    post: NewPost,
+) -> TaskResult<PostResponse, String> {
     let post = InsertablePost {
         user_id,
         caption: post.caption,
@@ -20,18 +23,23 @@ pub async fn create_post(pool: &PgPool, user_id: i32, post: Json<NewPost>) -> Cr
         lon: post.lon,
     };
 
-    match diesel::insert_into(posts::table)
-        .values(&post)
-        .get_result::<Post>(db_conn)
-    {
-        Ok(post) => {
-            let response = PostResponse { post };
-            Created::new("").tagged_body(serde_json::to_string(&response).unwrap())
-        }
-        Err(err) => match err {
-            _ => {
-                panic!("Database error - {}", err);
-            }
-        },
-    }
+    let result = sqlx::query_as::<_, Post>(
+        r#"
+        INSERT INTO posts
+        (user_id, caption, description, tags, photographer_id, lat, lon)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING *
+    "#,
+    )
+    .bind(user_id)
+    .bind(post.caption)
+    .bind(post.description)
+    .bind(post.tags)
+    .bind(post.photographer_id)
+    .bind(post.lat)
+    .bind(post.lon)
+    .fetch_one(pool)
+    .await;
+
+    map_sqlx_result(result.map(|p| PostResponse { post: p }))
 }
