@@ -11,6 +11,7 @@ RUN cargo new --bin api && \
     cargo new --lib infrastructure && \
     cargo new --lib shared
 
+COPY ./Cargo.lock ./Cargo.lock
 COPY ./Cargo.toml ./Cargo.toml
 COPY ./api/Cargo.toml ./api/Cargo.toml
 COPY ./application/Cargo.toml ./application/Cargo.toml
