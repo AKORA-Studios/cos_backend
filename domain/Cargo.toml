@@ -6,6 +6,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-sqlx = { workspace = true }
-serde = { workspace = true }
-chrono = { workspace = true }
+sqlx = { workspace = true, features = ["macros", "chrono"] }
+serde = { workspace = true, features = ["derive"] }
+chrono = { workspace = true, features = ["std", "alloc", "serde"] }

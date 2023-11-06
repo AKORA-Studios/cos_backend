@@ -10,8 +10,8 @@ pub use message::*;
 mod post;
 pub use post::*;
 
-mod relations;
-pub use relations::*;
+// mod relations;
+// pub use relations::*;
 
 mod user;
 pub use user::*;

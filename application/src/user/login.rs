@@ -2,28 +2,20 @@
 use domain::models::User;
 
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
-use serde::Serialize;
-use shared::{
-    request_models::LoginCredentials,
-    response_models::{ErrorMessageResponse, TokenResponse},
-};
+use shared::{auth::JWTClaims, request_models::LoginCredentials, response_models::TokenResponse};
 use sqlx::PgPool;
 use std::time::{Duration, SystemTime};
 
 use crate::{
-    auth::{self, JWTClaims},
+    auth::{self},
     map_sqlx_result,
 };
 
 use crate::{OpErr, TaskResult};
 
-fn unauthorized<T: Serialize>() -> TaskResult<T, String> {
-    let response = ErrorMessageResponse {
-        message: format!("Invalid password or username"),
-    };
-
+fn unauthorized() -> TaskResult<TokenResponse, String> {
     Err(OpErr::Unauthorized(
-        serde_json::to_string(&response).unwrap(),
+        "Invalid password or username".to_owned(),
     ))
 }
 

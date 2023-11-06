@@ -10,10 +10,9 @@ domain = { path = "../domain" }
 infrastructure = { path = "../infrastructure" }
 shared = { path = "../shared" }
 
-sqlx = { workspace = true }
-axum = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
+sqlx = { workspace = true, features = ["postgres"] }
+# serde = { workspace = true }
+# serde_json = { workspace = true }
 
 argon2 = "0.4.1"
 jsonwebtoken = { version = "8", default-features = false }
