@@ -98,11 +98,12 @@ async fn main() {
         .fallback(fallback_handler)
         .with_state(pool);
 
-    // User handlers
-
-    // run our app with hyper
-    // `axum::Server` is a re-export of `hyper::Server`
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    // Allow port configuratrion through environment variables
+    let port = env::var("PORT")
+        .unwrap_or("3000".to_owned())
+        .parse()
+        .unwrap_or(3000);
+    let addr = SocketAddr::from(([127, 0, 0, 1], port));
     //tracing::debug!("listening on {}", addr);
     println!("listening on http://{}", addr);
     axum::Server::bind(&addr)
