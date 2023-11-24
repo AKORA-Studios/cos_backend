@@ -9,3 +9,4 @@ edition = "2021"
 domain = { path = "../domain" }
 
 serde = { workspace = true, features = ["derive"] }
+axum = { workspace = true }

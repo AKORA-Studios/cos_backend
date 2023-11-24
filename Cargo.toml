@@ -4,14 +4,11 @@ members = ["api", "application", "domain", "infrastructure", "shared"]
 resolver = "2"
 
 [workspace.dependencies]
-sqlx = { version = "0.7", features = [
+sqlx = { version = "0.7.2", default-features = false, features = [
     "runtime-tokio",
-    "postgres",
-    "migrate",
-    "chrono",
 ] }
 
-axum = { version = "0.6.2", features = ["headers", "query"] }
+axum = { version = "0.6.2", features = [] }
 hyper = { version = "0.14.27", features = ["full"] }
 tokio = { version = "1.33.0", features = ["full"] }
 tower = "0.4.13"
@@ -19,7 +16,7 @@ tower = "0.4.13"
 serde = { version = "1.0.147" }
 serde_json = "1.0.88"
 
-chrono = { version = "0.4.31", features = ["serde"] }
+chrono = { version = "0.4.31", default-features = false, features = [] }
 
 [profile.dev.package.sqlx-macros]
 opt-level = 3

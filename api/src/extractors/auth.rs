@@ -1,10 +1,6 @@
 use std::ops::Deref;
 
-use application::{
-    auth::{verify_token, JWTClaims},
-    user::login,
-    OpResult,
-};
+use application::{auth::verify_token, user::login, OpResult};
 use axum::{
     async_trait,
     extract::{FromRequestParts, State},
@@ -15,7 +11,7 @@ use axum::{
 };
 use serde::Serialize;
 use serde_json::json;
-use shared::{request_models::LoginCredentials, response_models::TokenResponse};
+use shared::{auth::JWTClaims, request_models::LoginCredentials, response_models::TokenResponse};
 use sqlx::PgPool;
 
 #[derive(Debug, Serialize)]
