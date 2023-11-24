@@ -3,14 +3,16 @@
 use std::path::PathBuf;
 
 use axum::{
-    body::StreamBody,
-    http::{header, StatusCode},
+    body::{boxed, Body, BoxBody, StreamBody},
+    http::{header, Request, StatusCode, Uri},
     response::IntoResponse,
     response::Response,
 };
 
-use tokio::fs::File;
+use tower::util::ServiceExt;
+use tower_http::services::ServeDir;
 
+use tokio::fs::File;
 use tokio_util::io::ReaderStream;
 
 const UPLOAD_DIR: &'static str = concat!(env!("CARGO_MANIFEST_DIR"), "/../images");
@@ -21,6 +23,23 @@ fn profile_picture_path(user_id: i32) -> PathBuf {
 
 fn post_picture_path(post_id: i32, image: u32) -> PathBuf {
     PathBuf::from(format!("{UPLOAD_DIR}/posts/{post_id}/{image}"))
+}
+
+pub async fn get_static_file(uri: Uri) -> Result<Response<BoxBody>, (StatusCode, String)> {
+    let req = Request::builder().uri(uri).body(Body::empty()).unwrap();
+
+    // `ServeDir` implements `tower::Service` so we can call it with `tower::ServiceExt::oneshot`
+    // When run normally, the root is the workspace root
+    match ServeDir::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../contents"))
+        .oneshot(req)
+        .await
+    {
+        Ok(res) => Ok(res.map(boxed)),
+        Err(err) => Err((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Something went wrong: {}", err),
+        )),
+    }
 }
 
 /// Update user image

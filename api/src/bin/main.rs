@@ -23,13 +23,13 @@ async fn main() {
 
     // Create image directories if missing
     {
-        let upload_dir = concat!(env!("CARGO_MANIFEST_DIR"), "/../images");
+        let upload_dir = concat!(env!("CARGO_MANIFEST_DIR"), "/../contents");
         fs::create_dir_all(format!("{upload_dir}/users"))
-            .expect("Unable to create user images upload dir");
+            .expect("Unable to create user contents upload dir");
         fs::create_dir_all(format!("{upload_dir}/posts"))
-            .expect("Unable to create post images upload dir");
+            .expect("Unable to create post contents upload dir");
         fs::create_dir_all(format!("{upload_dir}/events"))
-            .expect("Unable to create event images upload dir");
+            .expect("Unable to create event contents upload dir");
     }
 
     // initialize tracing
@@ -83,8 +83,15 @@ async fn main() {
     let message_router = Router::new()
         .route("/users/:user_id/messages/new", post(create_message_handler))
         .route("/users/:user_id/messages", get(list_conversation_handler));
+
+    // Actual app creation
+
     let app = Router::new()
         .route("/", get(status_handler))
+        .nest(
+            "/contents",
+            Router::new().fallback(get(api::image_handler::get_static_file)),
+        )
         .nest(
             "/api",
             Router::new()
@@ -122,62 +129,3 @@ async fn fallback_handler() -> (StatusCode, String) {
         "This route, doesn't exist".to_owned(),
     )
 }
-
-/*
-fn rocket() -> _ {
-    let db: Map<_, Value> = map! {
-        "url" => database_url.into(),
-        "pool_size" => 10.into(),
-        "timeout" => 5.into(),
-    };
-
-    let figment = rocket::Config::figment().merge(("databases", map!["cos" => db]));
-
-    rocket::custom(figment)
-        .attach(DbConn::fairing())
-        .mount(
-            "/api",
-            routes![
-                // POST
-                post_handler::view_post_handler,
-                post_handler::list_today_posts_handler,
-                post_handler::list_recent_posts_handler,
-                post_handler::list_user_posts_handler,
-                post_handler::create_post_handler,
-                post_handler::create_comment_handler,
-                post_handler::list_recent_comments_handler,
-                // INTERACT
-                post_handler::delete_post_handler,
-                post_handler::like_post_handler,
-                post_handler::dislike_post_handler,
-                post_handler::download_post_handler,
-                // USER
-                user_handler::register_user_handler,
-                user_handler::login_user_handler,
-                user_handler::view_user_handler,
-                user_handler::view_me_handler,
-                user_handler::patch_me_handler,
-                // INTERACT
-                user_handler::follow_user_handler,
-                user_handler::unfollow_user_handler,
-                user_handler::block_user_handler,
-                user_handler::unblock_user_handler,
-                // EVENT
-                event_handler::create_event_handler,
-                event_handler::view_event_handler,
-                // MESSAGE
-                message_handler::create_message_handler,
-                message_handler::list_conversation_handler,
-            ],
-        )
-        .mount(
-            "/images",
-            routes![
-                image_handler::upload_profile_picture_handler,
-                image_handler::retrieve_profile_picture_handler,
-                image_handler::upload_post_picture_handler,
-                image_handler::retrieve_post_picture_handler,
-            ],
-        )
-}
- */
