@@ -54,6 +54,7 @@ async fn main() {
 
     // build our application with a route
     let user_router = Router::new()
+        .route("/users/:user_id", get(view_user_handler))
         .route("/users/:user_id/posts", get(list_user_posts_handler))
         .route("/users/:user_id/follow", put(follow_user_handler))
         .route("/users/:user_id/unfollow", put(unfollow_user_handler))

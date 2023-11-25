@@ -3,6 +3,9 @@
 - https://codereview.stackexchange.com/questions/153710/sql-database-for-a-social-network
 
 ## TODO
+ - [ ] Delete posts `"error returned from database: update or delete on table \"posts\" violates foreign key constraint \"post_likes_post_id_fkey\" on table \"post_likes\""`
+ - [ ] Allow repeated follow/like/block `"error returned from database: duplicate key value violates unique constraint \"user_follows_pkey\""`
+
 
 Search for !TODO
 
