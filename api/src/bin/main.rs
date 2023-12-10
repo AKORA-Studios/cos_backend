@@ -23,12 +23,15 @@ async fn main() {
 
     // Create image directories if missing
     {
-        let upload_dir = concat!(env!("CARGO_MANIFEST_DIR"), "/../contents");
-        fs::create_dir_all(format!("{upload_dir}/users"))
+        let upload_dir = env::current_dir()
+            .expect("Unable to get CWD")
+            .join("contents");
+
+        fs::create_dir_all(upload_dir.join("users"))
             .expect("Unable to create user contents upload dir");
-        fs::create_dir_all(format!("{upload_dir}/posts"))
+        fs::create_dir_all(upload_dir.join("posts"))
             .expect("Unable to create post contents upload dir");
-        fs::create_dir_all(format!("{upload_dir}/events"))
+        fs::create_dir_all(upload_dir.join("events"))
             .expect("Unable to create event contents upload dir");
     }
 

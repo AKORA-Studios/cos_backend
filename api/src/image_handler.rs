@@ -15,14 +15,19 @@ use tower_http::services::ServeDir;
 use tokio::fs::File;
 use tokio_util::io::ReaderStream;
 
-const UPLOAD_DIR: &'static str = concat!(env!("CARGO_MANIFEST_DIR"), "/../images");
+fn get_path(join: &str) -> PathBuf {
+    std::env::current_dir()
+        .expect("Unable to get CWD")
+        .join("contents")
+        .join(join)
+}
 
 fn profile_picture_path(user_id: i32) -> PathBuf {
-    PathBuf::from(format!("{UPLOAD_DIR}/users/{user_id}"))
+    get_path(format!("users/{user_id}").as_str())
 }
 
 fn post_picture_path(post_id: i32, image: u32) -> PathBuf {
-    PathBuf::from(format!("{UPLOAD_DIR}/posts/{post_id}/{image}"))
+    get_path(format!("/posts/{post_id}/{image}").as_str())
 }
 
 pub async fn get_static_file(uri: Uri) -> Result<Response<BoxBody>, (StatusCode, String)> {
@@ -30,10 +35,7 @@ pub async fn get_static_file(uri: Uri) -> Result<Response<BoxBody>, (StatusCode,
 
     // `ServeDir` implements `tower::Service` so we can call it with `tower::ServiceExt::oneshot`
     // When run normally, the root is the workspace root
-    match ServeDir::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../contents"))
-        .oneshot(req)
-        .await
-    {
+    match ServeDir::new(get_path("")).oneshot(req).await {
         Ok(res) => Ok(res.map(boxed)),
         Err(err) => Err((
             StatusCode::INTERNAL_SERVER_ERROR,

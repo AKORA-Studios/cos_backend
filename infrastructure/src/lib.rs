@@ -115,8 +115,12 @@ where
     A: Acquire<'a>,
     <A::Connection as Deref>::Target: Migrate,
 {
-    let migration_path_str = concat!(env!("CARGO_MANIFEST_DIR"), "/migrations");
-    let path = CustomSource::new(migration_path_str);
+    let migration_path = std::env::current_dir()
+        .expect("Unable to get CWD")
+        .join("infrastructure/migrations");
+    let migration_path = migration_path.to_str().unwrap();
+
+    let path = CustomSource::new(migration_path);
 
     let migrator = Migrator::new(path).await?;
 
@@ -130,8 +134,12 @@ where
 /*
 /// For testing purposes only
 pub async fn build_migrator() -> Result<Migrator, MigrateError> {
-    let migration_path_str = concat!(env!("CARGO_MANIFEST_DIR"), "/migrations");
-    let path = CustomSource::new(migration_path_str);
+    let migration_path = std::env::current_dir()
+        .expect("Unable to get CWD")
+        .join("migrations");
+    let migration_path = migration_path.to_str().unwrap();
+
+    let path = CustomSource::new(migration_path);
 
     Migrator::new(path).await
 }
