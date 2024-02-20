@@ -1,18 +1,21 @@
 // application/src/post/read.rs
 
-use domain::models::{
-    FullJoinedPostWithCounts, FullPost, JoinedPostWithUser, POST_WITH_USER_COLUMNS,
-};
+use domain::models::{FullPost, JoinedPostWithUser, RawFullPost, POST_WITH_USER_COLUMNS};
 use sqlx::PgPool;
 
 use crate::{map_sqlx_result, TaskResult};
 
 // !TODO Also return users if they already liked a post or not
 
-pub async fn view_post(pool: &PgPool, post_id: i32) -> TaskResult<FullPost, String> {
+pub async fn view_post(
+    pool: &PgPool,
+    post_id: i32,
+    viewer_id: Option<i32>,
+) -> TaskResult<FullPost, String> {
     let sql = format!(
         r#"
-        SELECT {}, 
+        SELECT {POST_WITH_USER_COLUMNS},
+        (SELECT EXISTS(SELECT FROM post_likes WHERE post_id = $1 AND user_id = $2 )) AS is_liked,
         (SELECT COUNT(*) FROM post_downloads WHERE post_id = $1) AS download_count,
         (SELECT COUNT(*) FROM post_likes WHERE post_id = $1) AS like_count,
         (SELECT COUNT(*) FROM post_depicted_people WHERE post_id = $1) AS people_count
@@ -21,36 +24,15 @@ pub async fn view_post(pool: &PgPool, post_id: i32) -> TaskResult<FullPost, Stri
 
         WHERE posts.id = $1
         "#,
-        POST_WITH_USER_COLUMNS
     );
 
-    /*
-    SELECT posts.id,
-    posts.caption,
-    posts.description,
-    posts.user_id,
-    posts.tags,
-    posts.photographer_id,
-    posts.lat,
-    posts.lon,
-    posts.created_at,
-    users.username,
-    users.nickname,
-       (SELECT COUNT(*) FROM post_downloads WHERE post_id = 2) AS download_count,
-       (SELECT COUNT(*) FROM post_likes WHERE post_id = 2) AS like_count,
-       (SELECT COUNT(*) FROM post_depicted_people WHERE post_id = 2) AS people_count
-
-       FROM posts INNER JOIN users ON posts.user_id = users.id
-       WHERE posts.id = 2;
-
-    */
-
-    let result = sqlx::query_as::<_, FullJoinedPostWithCounts>(&sql)
+    let result = sqlx::query_as::<_, RawFullPost>(&sql)
         .bind(post_id)
+        .bind(viewer_id.unwrap_or(0)) // TODO: Probably not the smartest assumption
         .fetch_one(pool)
         .await;
 
-    map_sqlx_result(result.map(|p| p.convert(p.download_count, p.like_count, p.people_count)))
+    map_sqlx_result(result.map(|p| p.convert()))
 }
 
 pub async fn list_recent_posts(
