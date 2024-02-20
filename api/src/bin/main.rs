@@ -74,7 +74,7 @@ async fn main() {
         .route("/posts/:post_id", get(view_post_handler))
         .route("/posts/:post_id", delete(delete_post_handler))
         .route("/posts/:post_id/like", put(like_post_handler))
-        .route("/posts/:post_id/dislike", put(dislike_post_handler))
+        .route("/posts/:post_id/unlike", put(unlike_post_handler))
         .route("/posts/:post_id/download", put(download_post_handler))
         .route("/posts/:post_id/comments/new", post(create_comment_handler))
         .route(
