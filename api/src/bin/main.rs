@@ -21,6 +21,9 @@ async fn main() {
     dotenv().ok();
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set.");
 
+    // Check for JWT_SECRET
+    env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+
     // Create image directories if missing
     {
         let upload_dir = env::current_dir()
