@@ -86,33 +86,3 @@ pub struct PostUserInfo {
     pub username: String,
     pub nickname: String,
 }
-
-/*
-type PostWithUserColumns = (
-    posts.id,
-    posts.caption,
-    posts.description,
-    posts.user_id,
-    posts.tags,
-    posts.photographer_id,
-    posts.lat,
-    posts.lon,
-    posts.created_at,
-    users.username,
-    users.nickname,
-);
-*/
-
-pub const POST_WITH_USER_COLUMNS: &'static str = r#"
-    posts.id,
-    posts.caption,
-    posts.description,
-    posts.user_id,
-    posts.tags,
-    posts.photographer_id,
-    posts.lat,
-    posts.lon,
-    posts.created_at,
-    users.username,
-    users.nickname
-"#;
