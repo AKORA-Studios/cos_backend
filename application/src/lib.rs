@@ -12,9 +12,9 @@ pub use util::{OpErr, OpResult, OpSuc, TaskResult};
 use crate::post::read::prepare_post_statements;
 
 #[must_use = "This needs to be run when the connection is created, otherwise the queries won't run"]
-pub async fn prepare_statements(pool: &sqlx::PgPool) -> Result<(), sqlx::Error> {
+pub async fn prepare_statements(conn: &mut sqlx::PgConnection) -> Result<(), sqlx::Error> {
     use futures::try_join;
-    let _ = try_join!(prepare_post_statements(pool))?;
+    let _ = try_join!(prepare_post_statements(conn))?;
 
     Ok(())
 }

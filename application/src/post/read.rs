@@ -1,7 +1,7 @@
 // application/src/post/read.rs
 
 use domain::models::{FullJoinedPostWithCounts, FullPost};
-use sqlx::PgPool;
+use sqlx::{Acquire, PgPool};
 
 use crate::{map_sqlx_result, TaskResult};
 
@@ -25,50 +25,61 @@ const POST_WITH_USER_COLUMNS_AND_COUNTS: &'static str = r#"
         AS people_count
 "#;
 
-pub async fn prepare_post_statements(pool: &PgPool) -> Result<(), sqlx::Error> {
-    let prepare_view_post = format!(
-        r#"
-        PREPARE view_post(int) AS
-            SELECT {POST_WITH_USER_COLUMNS_AND_COUNTS}
-            FROM posts INNER JOIN users ON posts.user_id = users.id
-            WHERE posts.id = $1;
+use const_format::formatcp;
+
+const SQL_VIEW_POST: &'static str = formatcp!(
+    r#"
+        SELECT {POST_WITH_USER_COLUMNS_AND_COUNTS}
+        FROM posts INNER JOIN users ON posts.user_id = users.id
+        WHERE posts.id = $1;
     "#
-    );
+);
 
-    let prepare_list_recent_posts = format!(
-        r#"
-        PREPARE list_recent_posts(int) AS
-            SELECT {POST_WITH_USER_COLUMNS_AND_COUNTS}
-            FROM posts INNER JOIN users ON posts.user_id = users.id
-            ORDER BY posts.created_at DESC
-            LIMIT $1;
+const SQL_LIST_RECENT_POSTS: &'static str = formatcp!(
+    r#"
+        SELECT {POST_WITH_USER_COLUMNS_AND_COUNTS}
+        FROM posts INNER JOIN users ON posts.user_id = users.id
+        ORDER BY posts.created_at DESC
+        LIMIT $1;
     "#
-    );
+);
 
-    let prepare_list_recent_posts_by_user = format!(
-        r#"
-        PREPARE list_recent_posts_by_user(int, int) AS
-            SELECT {POST_WITH_USER_COLUMNS_AND_COUNTS}
-            FROM posts INNER JOIN users ON posts.user_id = users.id
-            WHERE posts.user_id = $1
-            ORDER BY posts.created_at DESC
-            LIMIT $2;
+const SQL_LIST_RECENT_POSTS_BY_USER: &'static str = formatcp!(
+    r#"
+        SELECT {POST_WITH_USER_COLUMNS_AND_COUNTS}
+        FROM posts INNER JOIN users ON posts.user_id = users.id
+        WHERE posts.user_id = $1
+        ORDER BY posts.created_at DESC
+        LIMIT $2;
     "#
-    );
+);
 
-    use futures::try_join;
+pub async fn prepare_post_statements(conn: &mut sqlx::PgConnection) -> Result<(), sqlx::Error> {
+    let prepare_view_post = format!("PREPARE view_post(int) AS {SQL_VIEW_POST}");
 
-    let _ = try_join!(
-        sqlx::query(&prepare_view_post).execute(pool),
-        sqlx::query(&prepare_list_recent_posts).execute(pool),
-        sqlx::query(&prepare_list_recent_posts_by_user).execute(pool),
-    )?;
+    let prepare_list_recent_posts =
+        format!("PREPARE list_recent_posts(int) AS {SQL_LIST_RECENT_POSTS}");
+
+    let prepare_list_recent_posts_by_user =
+        format!("PREPARE list_recent_posts_by_user(int, int) AS {SQL_LIST_RECENT_POSTS_BY_USER}");
+
+    let mut trans = conn.begin().await?;
+
+    sqlx::query(&prepare_view_post).execute(&mut *trans).await?;
+    sqlx::query(&prepare_list_recent_posts)
+        .execute(&mut *trans)
+        .await?;
+    sqlx::query(&prepare_list_recent_posts_by_user)
+        .execute(&mut *trans)
+        .await?;
+
+    trans.commit().await?;
 
     Ok(())
 }
 
 pub async fn view_post(pool: &PgPool, post_id: i32) -> TaskResult<FullPost, String> {
-    let result = sqlx::query_as::<_, FullJoinedPostWithCounts>("EXECUTE view_post($1);")
+    let result = sqlx::query_as::<_, FullJoinedPostWithCounts>(SQL_VIEW_POST)
         .bind(post_id)
         .fetch_one(pool)
         .await;
@@ -80,7 +91,7 @@ pub async fn list_recent_posts(
     pool: &PgPool,
     limit: i32,
 ) -> TaskResult<Vec<FullJoinedPostWithCounts>, String> {
-    let result = sqlx::query_as::<_, FullJoinedPostWithCounts>("EXECUTE list_recent_posts($1);")
+    let result = sqlx::query_as::<_, FullJoinedPostWithCounts>(SQL_LIST_RECENT_POSTS)
         .bind(limit)
         .fetch_all(pool)
         .await;
@@ -125,12 +136,11 @@ pub async fn list_user_posts(
     user_id: i32,
     limit: i32,
 ) -> TaskResult<Vec<FullJoinedPostWithCounts>, String> {
-    let result =
-        sqlx::query_as::<_, FullJoinedPostWithCounts>("EXECUTE list_recent_posts_by_user($1, $2);")
-            .bind(user_id)
-            .bind(limit)
-            .fetch_all(pool)
-            .await;
+    let result = sqlx::query_as::<_, FullJoinedPostWithCounts>(SQL_LIST_RECENT_POSTS_BY_USER)
+        .bind(user_id)
+        .bind(limit)
+        .fetch_all(pool)
+        .await;
 
     map_sqlx_result(result)
 }
