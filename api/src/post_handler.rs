@@ -4,7 +4,7 @@ use application::post::*;
 use application::{OpResult, OpSuc};
 use axum::extract::{Path, State};
 use axum::Json;
-use domain::models::{FullJoinedPostWithCounts, FullPost, Post};
+use domain::models::{FullPost, Post};
 use shared::response_models::{CommentResponse, PostResponse, PostsResponse};
 use sqlx::postgres::PgPool;
 
@@ -28,10 +28,10 @@ pub async fn create_post_handler(
 /// get /posts/<post_id>
 pub async fn view_post_handler(
     State(pool): State<PgPool>,
-    Claims(claims): Claims, // TODO: Add route that allows for non authorized post viewing
+    Claims(_claims): Claims, // TODO: Add route that allows for non authorized post viewing
     Path(post_id): Path<i32>,
 ) -> OpResult<PostResponse<FullPost>, String> {
-    let post = read::view_post(&pool, post_id, Some(claims.user_id)).await?;
+    let post = read::view_post(&pool, post_id).await?; //, Some(claims.user_id)).await?;
     let response = PostResponse { post };
 
     Ok(OpSuc::Read(response))
@@ -126,7 +126,7 @@ pub async fn list_today_posts_handler(
 pub async fn list_recent_posts_handler(
     State(pool): State<PgPool>,
     Limit(limit): Limit,
-) -> OpResult<PostsResponse<FullJoinedPostWithCounts>, String> {
+) -> OpResult<PostsResponse<FullPost>, String> {
     let limit = limit.unwrap_or(25);
     let posts = read::list_recent_posts(&pool, limit).await?;
 
@@ -140,7 +140,7 @@ pub async fn list_user_posts_handler(
     State(pool): State<PgPool>,
     Path(user_id): Path<i32>,
     Limit(limit): Limit,
-) -> OpResult<PostsResponse<FullJoinedPostWithCounts>, String> {
+) -> OpResult<PostsResponse<FullPost>, String> {
     let limit = limit.unwrap_or(25);
     let posts = read::list_user_posts(&pool, user_id, limit).await?;
     let response = PostsResponse { posts };

@@ -1,6 +1,6 @@
 // application/src/post/read.rs
 
-use domain::models::{FullJoinedPostWithCounts, FullPost};
+use domain::models::{FullPost, RawFullPost};
 use sqlx::{Acquire, PgPool};
 
 use crate::{map_sqlx_result, TaskResult};
@@ -15,8 +15,8 @@ const POST_WITH_USER_COLUMNS_AND_COUNTS: &'static str = r#"
     posts.lat,
     posts.lon,
     posts.created_at,
-    users.username,
-    users.nickname,
+    users.username AS author_username,
+    users.nickname AS author_nickname,
     (SELECT COUNT(*) FROM post_downloads WHERE post_id = posts.id)
         AS download_count,
     (SELECT COUNT(*) FROM post_likes WHERE post_id = posts.id)
@@ -79,25 +79,22 @@ pub async fn prepare_post_statements(conn: &mut sqlx::PgConnection) -> Result<()
 }
 
 pub async fn view_post(pool: &PgPool, post_id: i32) -> TaskResult<FullPost, String> {
-    let result = sqlx::query_as::<_, FullJoinedPostWithCounts>(SQL_VIEW_POST)
+    let result = sqlx::query_as::<_, RawFullPost>(SQL_VIEW_POST)
         .bind(post_id)
-   //     .bind(viewer_id.unwrap_or(0)) // TODO: Probably not the smartest assumption
+        //     .bind(viewer_id.unwrap_or(0)) // TODO: Probably not the smartest assumption
         .fetch_one(pool)
         .await;
 
     map_sqlx_result(result.map(|p| p.convert()))
 }
 
-pub async fn list_recent_posts(
-    pool: &PgPool,
-    limit: i32,
-) -> TaskResult<Vec<FullJoinedPostWithCounts>, String> {
-    let result = sqlx::query_as::<_, FullJoinedPostWithCounts>(SQL_LIST_RECENT_POSTS)
+pub async fn list_recent_posts(pool: &PgPool, limit: i32) -> TaskResult<Vec<FullPost>, String> {
+    let result = sqlx::query_as::<_, RawFullPost>(SQL_LIST_RECENT_POSTS)
         .bind(limit)
         .fetch_all(pool)
         .await;
 
-    map_sqlx_result(result)
+    map_sqlx_result(result.map(|p| p.into_iter().map(|p| p.convert()).collect()))
 }
 
 /*
@@ -136,12 +133,12 @@ pub async fn list_user_posts(
     pool: &PgPool,
     user_id: i32,
     limit: i32,
-) -> TaskResult<Vec<FullJoinedPostWithCounts>, String> {
-    let result = sqlx::query_as::<_, FullJoinedPostWithCounts>(SQL_LIST_RECENT_POSTS_BY_USER)
+) -> TaskResult<Vec<FullPost>, String> {
+    let result = sqlx::query_as::<_, RawFullPost>(SQL_LIST_RECENT_POSTS_BY_USER)
         .bind(user_id)
         .bind(limit)
         .fetch_all(pool)
         .await;
 
-    map_sqlx_result(result)
+    map_sqlx_result(result.map(|p| p.into_iter().map(|p| p.convert()).collect()))
 }

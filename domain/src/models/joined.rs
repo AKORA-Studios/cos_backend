@@ -33,8 +33,7 @@ pub struct RawFullPost {
     pub author_username: String,
     pub author_nickname: String,
 
-    pub is_liked: bool,
-
+    // pub is_liked: bool,
     pub download_count: i64,
     pub like_count: i64,
     pub people_count: i64,
@@ -72,8 +71,7 @@ impl RawFullPost {
             lon: self.lon,
             created_at: self.created_at,
 
-            is_liked: self.is_liked,
-
+            // is_liked: self.is_liked,
             stats: PostStats {
                 downloads: self.download_count,
                 likes: self.like_count,
@@ -95,8 +93,7 @@ pub struct FullPost {
     pub lon: Option<f64>,
     pub created_at: DateTime<Local>,
 
-    pub is_liked: bool,
-
+    //  pub is_liked: bool,
     pub stats: PostStats,
     //pub depicted_people: Vec<i32>,
 }
