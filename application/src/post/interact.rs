@@ -28,6 +28,7 @@ pub async fn like_post(pool: &PgPool, user_id: i32, post_id: i32) -> TaskResult<
         INSERT INTO post_likes
         (post_id, user_id)
         VALUES ($1, $2)
+        ON CONFLICT(post_id, user_id) DO NOTHING
         "#,
         )
         .bind(post_id)
@@ -38,7 +39,7 @@ pub async fn like_post(pool: &PgPool, user_id: i32, post_id: i32) -> TaskResult<
     )
 }
 
-pub async fn dislike_post(pool: &PgPool, user_id: i32, post_id: i32) -> TaskResult<(), String> {
+pub async fn unlike_post(pool: &PgPool, user_id: i32, post_id: i32) -> TaskResult<(), String> {
     map_sqlx_result(
         sqlx::query(
             r#"
@@ -61,6 +62,7 @@ pub async fn download_post(pool: &PgPool, user_id: i32, post_id: i32) -> TaskRes
             INSERT INTO post_downloads
             (post_id, user_id)
             VALUES ($1, $2)
+            ON CONFLICT(post_id, user_id) DO NOTHING
             "#,
         )
         .bind(post_id)

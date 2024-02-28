@@ -21,6 +21,9 @@ async fn main() {
     dotenv().ok();
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set.");
 
+    // Check for JWT_SECRET
+    env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+
     // Create image directories if missing
     {
         let upload_dir = env::current_dir()
@@ -79,7 +82,7 @@ async fn main() {
         .route("/posts/:post_id", get(view_post_handler))
         .route("/posts/:post_id", delete(delete_post_handler))
         .route("/posts/:post_id/like", put(like_post_handler))
-        .route("/posts/:post_id/dislike", put(dislike_post_handler))
+        .route("/posts/:post_id/unlike", put(unlike_post_handler))
         .route("/posts/:post_id/download", put(download_post_handler))
         .route("/posts/:post_id/comments/new", post(create_comment_handler))
         .route(

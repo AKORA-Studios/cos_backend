@@ -28,9 +28,10 @@ pub async fn create_post_handler(
 /// get /posts/<post_id>
 pub async fn view_post_handler(
     State(pool): State<PgPool>,
+    Claims(claims): Claims, // TODO: Add route that allows for non authorized post viewing
     Path(post_id): Path<i32>,
 ) -> OpResult<PostResponse<FullPost>, String> {
-    let post = read::view_post(&pool, post_id).await?;
+    let post = read::view_post(&pool, post_id, Some(claims.user_id)).await?;
     let response = PostResponse { post };
 
     Ok(OpSuc::Read(response))
@@ -58,13 +59,13 @@ pub async fn like_post_handler(
         .map(|_| OpSuc::Created(()))
 }
 
-/// put /posts/<post_id>/dislike
-pub async fn dislike_post_handler(
+/// put /posts/<post_id>/unlike
+pub async fn unlike_post_handler(
     State(pool): State<PgPool>,
     Claims(claims): Claims,
     Path(post_id): Path<i32>,
 ) -> OpResult<(), String> {
-    interact::dislike_post(&pool, claims.user_id, post_id)
+    interact::unlike_post(&pool, claims.user_id, post_id)
         .await
         .map(|_| OpSuc::Deleted(()))
 }
@@ -80,7 +81,6 @@ pub async fn download_post_handler(
         .map(|_| OpSuc::Created(()))
 }
 
-// !TODO use post_id in url
 /// POST /posts/<post_id>/comments/new     <comment>
 pub async fn create_comment_handler(
     State(pool): State<PgPool>,

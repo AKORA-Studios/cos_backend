@@ -81,10 +81,11 @@ pub async fn prepare_post_statements(conn: &mut sqlx::PgConnection) -> Result<()
 pub async fn view_post(pool: &PgPool, post_id: i32) -> TaskResult<FullPost, String> {
     let result = sqlx::query_as::<_, FullJoinedPostWithCounts>(SQL_VIEW_POST)
         .bind(post_id)
+   //     .bind(viewer_id.unwrap_or(0)) // TODO: Probably not the smartest assumption
         .fetch_one(pool)
         .await;
 
-    map_sqlx_result(result.map(|p| p.convert(p.download_count, p.like_count, p.people_count)))
+    map_sqlx_result(result.map(|p| p.convert()))
 }
 
 pub async fn list_recent_posts(

@@ -8,6 +8,7 @@ pub async fn follow_user(pool: &PgPool, user_id: i32, following_id: i32) -> Task
         r#"
         INSERT INTO user_follows (user_id, following_id)
         VALUES ($1, $2)
+        ON CONFLICT(user_id, following_id) DO NOTHING
         "#,
     )
     .bind(user_id)
@@ -42,6 +43,7 @@ pub async fn block_user(pool: &PgPool, user_id: i32, blocked_id: i32) -> TaskRes
         r#"
             INSERT INTO user_blocked (user_id, blocked_id)
             VALUES ($1, $2)
+            ON CONFLICT(user_id, blocked_id) DO NOTHING
             "#,
     )
     .bind(user_id)
