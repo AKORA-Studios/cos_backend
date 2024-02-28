@@ -49,6 +49,9 @@ async fn main() {
     if let Err(e) = infrastructure::run_migrations(&pool).await {
         panic!("Error while running migrations: {e}")
     }
+    if let Err(e) = application::prepare_statements(&pool).await {
+        panic!("Error while preparing statements: {e}")
+    }
 
     use api::event_handler::*;
     use api::message_handler::*;
