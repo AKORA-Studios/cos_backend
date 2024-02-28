@@ -17,6 +17,8 @@ const POST_WITH_USER_COLUMNS_AND_COUNTS: &'static str = r#"
     posts.created_at,
     users.username AS author_username,
     users.nickname AS author_nickname,
+    (SELECT EXISTS(SELECT FROM post_likes WHERE post_id = posts.id AND user_id = $1 ))
+        AS is_liked,
     (SELECT COUNT(*) FROM post_downloads WHERE post_id = posts.id)
         AS download_count,
     (SELECT COUNT(*) FROM post_likes WHERE post_id = posts.id)
@@ -31,7 +33,7 @@ const SQL_VIEW_POST: &'static str = formatcp!(
     r#"
         SELECT {POST_WITH_USER_COLUMNS_AND_COUNTS}
         FROM posts INNER JOIN users ON posts.user_id = users.id
-        WHERE posts.id = $1;
+        WHERE posts.id = $2;
     "#
 );
 
@@ -40,7 +42,7 @@ const SQL_LIST_RECENT_POSTS: &'static str = formatcp!(
         SELECT {POST_WITH_USER_COLUMNS_AND_COUNTS}
         FROM posts INNER JOIN users ON posts.user_id = users.id
         ORDER BY posts.created_at DESC
-        LIMIT $1;
+        LIMIT $2;
     "#
 );
 
@@ -48,9 +50,9 @@ const SQL_LIST_RECENT_POSTS_BY_USER: &'static str = formatcp!(
     r#"
         SELECT {POST_WITH_USER_COLUMNS_AND_COUNTS}
         FROM posts INNER JOIN users ON posts.user_id = users.id
-        WHERE posts.user_id = $1
+        WHERE posts.user_id = $2
         ORDER BY posts.created_at DESC
-        LIMIT $2;
+        LIMIT $3;
     "#
 );
 
@@ -78,18 +80,27 @@ pub async fn prepare_post_statements(conn: &mut sqlx::PgConnection) -> Result<()
     Ok(())
 }
 
-pub async fn view_post(pool: &PgPool, post_id: i32) -> TaskResult<FullPost, String> {
+pub async fn view_post(
+    pool: &PgPool,
+    post_id: i32,
+    viewer_id: Option<i32>,
+) -> TaskResult<FullPost, String> {
     let result = sqlx::query_as::<_, RawFullPost>(SQL_VIEW_POST)
+        .bind(viewer_id.unwrap_or(0)) // TODO: Probably not the smartest assumption
         .bind(post_id)
-        //     .bind(viewer_id.unwrap_or(0)) // TODO: Probably not the smartest assumption
         .fetch_one(pool)
         .await;
 
     map_sqlx_result(result.map(|p| p.convert()))
 }
 
-pub async fn list_recent_posts(pool: &PgPool, limit: i32) -> TaskResult<Vec<FullPost>, String> {
+pub async fn list_recent_posts(
+    pool: &PgPool,
+    limit: i32,
+    viewer_id: Option<i32>,
+) -> TaskResult<Vec<FullPost>, String> {
     let result = sqlx::query_as::<_, RawFullPost>(SQL_LIST_RECENT_POSTS)
+        .bind(viewer_id.unwrap_or(0)) // TODO: Probably not the smartest assumption
         .bind(limit)
         .fetch_all(pool)
         .await;
@@ -133,8 +144,10 @@ pub async fn list_user_posts(
     pool: &PgPool,
     user_id: i32,
     limit: i32,
+    viewer_id: Option<i32>,
 ) -> TaskResult<Vec<FullPost>, String> {
     let result = sqlx::query_as::<_, RawFullPost>(SQL_LIST_RECENT_POSTS_BY_USER)
+        .bind(viewer_id)
         .bind(user_id)
         .bind(limit)
         .fetch_all(pool)
