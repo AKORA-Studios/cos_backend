@@ -3,7 +3,7 @@ use chrono::{DateTime, Local};
 use serde::Serialize;
 
 #[derive(sqlx::FromRow, Debug, Serialize)]
-pub struct JoinedPostWithUser {
+pub struct FullJoinedPostWithCounts {
     pub id: i32,
     pub caption: Option<String>,
     pub description: Option<String>,

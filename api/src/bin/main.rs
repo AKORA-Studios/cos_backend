@@ -45,6 +45,14 @@ async fn main() {
     let pool = PgPoolOptions::new()
         .max_connections(5)
         .acquire_timeout(Duration::from_secs(3))
+        .after_connect(|conn, _meta| {
+            Box::pin(async move {
+                // Create all preapred statements
+                application::prepare_statements(conn).await?;
+
+                Ok(())
+            })
+        })
         .connect(&database_url)
         .await
         .expect("can't connect to database");
