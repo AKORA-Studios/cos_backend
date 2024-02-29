@@ -4,7 +4,7 @@ use domain::models::Comment;
 
 use sqlx::PgPool;
 
-use crate::{map_sqlx_result, TaskResult};
+use crate::TaskResult;
 
 use shared::request_models::NewComment;
 use shared::response_models::CommentResponse;
@@ -15,7 +15,7 @@ pub async fn create_post_comment(
     post_id: i32,
     comment: NewComment,
 ) -> TaskResult<CommentResponse, String> {
-    let result = sqlx::query_as::<_, Comment>(
+    let comment: Comment = sqlx::query_as::<_, Comment>(
         r#"
         INSERT INTO comments
         (content, user_id, post_id, reply_to)
@@ -28,9 +28,9 @@ pub async fn create_post_comment(
     .bind(post_id)
     .bind(comment.reply_to)
     .fetch_one(pool)
-    .await;
+    .await?;
 
-    map_sqlx_result(result.map(|c| CommentResponse { comment: c }))
+    Ok(CommentResponse { comment })
 }
 
 pub async fn list_recent_comments(
@@ -38,7 +38,7 @@ pub async fn list_recent_comments(
     c_post_id: i32,
     limit: i32,
 ) -> TaskResult<Vec<Comment>, String> {
-    let result = sqlx::query_as::<_, Comment>(
+    let comments = sqlx::query_as::<_, Comment>(
         r#"
         SELECT * FROM comments
         WHERE post_id = $1
@@ -49,7 +49,7 @@ pub async fn list_recent_comments(
     .bind(c_post_id)
     .bind(limit.abs())
     .fetch_all(pool)
-    .await;
+    .await?;
 
-    map_sqlx_result(result)
+    Ok(comments)
 }

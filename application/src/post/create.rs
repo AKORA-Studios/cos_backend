@@ -2,7 +2,7 @@
 
 use sqlx::PgPool;
 
-use crate::{map_sqlx_result, TaskResult};
+use crate::TaskResult;
 use domain::models::Post;
 
 use shared::request_models::NewPost;
@@ -13,7 +13,7 @@ pub async fn create_post(
     user_id: i32,
     post: NewPost,
 ) -> TaskResult<PostResponse<Post>, String> {
-    let result = sqlx::query_as::<_, Post>(
+    let post = sqlx::query_as::<_, Post>(
         r#"
         INSERT INTO posts
         (user_id, caption, description, tags, photographer_id, lat, lon)
@@ -29,7 +29,7 @@ pub async fn create_post(
     .bind(post.lat)
     .bind(post.lon)
     .fetch_one(pool)
-    .await;
+    .await?;
 
-    map_sqlx_result(result.map(|p| PostResponse { post: p }))
+    Ok(PostResponse { post })
 }

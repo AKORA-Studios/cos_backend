@@ -6,7 +6,7 @@ use shared::request_models::NewMessage;
 use shared::response_models::MessageResponse;
 use sqlx::PgPool;
 
-use crate::{map_sqlx_result, TaskResult};
+use crate::TaskResult;
 
 pub async fn create_message(
     pool: &PgPool,
@@ -14,7 +14,7 @@ pub async fn create_message(
     to_user_id: i32,
     msg: NewMessage,
 ) -> TaskResult<MessageResponse, String> {
-    let result = sqlx::query_as::<_, Message>(
+    let message = sqlx::query_as::<_, Message>(
         r#"
         INSERT INTO messages
         (content, attachment_id, reply_to, from_id, to_id)
@@ -28,7 +28,7 @@ pub async fn create_message(
     .bind(from_user_id)
     .bind(to_user_id)
     .fetch_one(pool)
-    .await;
+    .await?;
 
-    map_sqlx_result(result.map(|m| MessageResponse { message: m }))
+    Ok(MessageResponse { message })
 }

@@ -4,7 +4,7 @@ use domain::models::{DisplayUser, PatchedUser, DISPLAY_USER_COLUMNS};
 
 use sqlx::{PgPool, Postgres, QueryBuilder};
 
-use crate::{map_sqlx_result, TaskResult};
+use crate::TaskResult;
 
 pub async fn modify_user(
     conn: &PgPool,
@@ -53,7 +53,7 @@ pub async fn modify_user(
 
     let finished_query = query.build_query_as::<DisplayUser>();
 
-    let result = finished_query.fetch_one(conn).await;
+    let user = finished_query.fetch_one(conn).await?;
 
-    map_sqlx_result(result)
+    Ok(user)
 }

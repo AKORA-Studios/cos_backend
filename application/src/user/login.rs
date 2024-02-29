@@ -6,10 +6,7 @@ use shared::{auth::JWTClaims, request_models::LoginCredentials, response_models:
 use sqlx::PgPool;
 use std::time::{Duration, SystemTime};
 
-use crate::{
-    auth::{self},
-    map_sqlx_result,
-};
+use crate::auth;
 
 use crate::{OpErr, TaskResult};
 
@@ -40,7 +37,7 @@ pub async fn fetch_user_with_credentials(
         ),
     };
 
-    (password, map_sqlx_result(user))
+    (password, user.map_err(|e| e.into()))
 }
 
 pub async fn authorize_user(password: &str, user: User) -> TaskResult<TokenResponse, String> {

@@ -9,7 +9,7 @@ use argon2::{
 };
 use sqlx::PgPool;
 
-use crate::{map_sqlx_result, TaskResult};
+use crate::TaskResult;
 
 fn hash_password(password: &[u8]) -> String {
     let salt = SaltString::generate(&mut OsRng);
@@ -35,7 +35,7 @@ pub async fn register_user(conn: &PgPool, user: RegisterUser) -> TaskResult<User
         RETURNING {DISPLAY_USER_COLUMNS}
     "#
     );
-    let result = sqlx::query_as::<_, DisplayUser>(&sql)
+    let user = sqlx::query_as::<_, DisplayUser>(&sql)
         .bind(user.username)
         .bind(user.nickname)
         .bind(hashed_password)
@@ -49,7 +49,7 @@ pub async fn register_user(conn: &PgPool, user: RegisterUser) -> TaskResult<User
         .bind(user.youtube_username)
         .bind(user.myanimelist_username)
         .fetch_one(conn)
-        .await;
+        .await?;
 
-    map_sqlx_result(result.map(|v| UserResponse { user: v }))
+    Ok(UserResponse { user })
 }
