@@ -3,22 +3,6 @@ use chrono::{DateTime, Local};
 use serde::Serialize;
 
 #[derive(sqlx::FromRow, Debug, Serialize)]
-pub struct FullJoinedPostWithCounts {
-    pub id: i32,
-    pub caption: Option<String>,
-    pub description: Option<String>,
-    pub user_id: i32,
-    pub tags: Vec<Option<String>>,
-    pub photographer_id: Option<i32>,
-    pub lat: Option<f64>,
-    pub lon: Option<f64>,
-    pub created_at: DateTime<Local>,
-
-    pub author_username: String,
-    pub author_nickname: String,
-}
-
-#[derive(sqlx::FromRow, Debug, Serialize)]
 pub struct RawFullPost {
     pub id: i32,
     pub caption: Option<String>,
