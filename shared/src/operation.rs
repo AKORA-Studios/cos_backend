@@ -26,8 +26,32 @@ pub enum OpErr<E: Serialize> {
     InternalError(E),
     Unauthorized(E),
     NotFound(E),
+    BadRequest(E),
     Any(E),
 }
+
+impl From<std::io::Error> for OpErr<String> {
+    fn from(value: std::io::Error) -> Self {
+        use std::io::ErrorKind;
+
+        match value.kind() {
+            ErrorKind::NotFound => OpErr::NotFound("File not found".to_owned()),
+            _ => {
+                eprintln!("{value:?}");
+                OpErr::Any("IO error".to_owned())
+            }
+        }
+    }
+}
+
+impl From<axum::Error> for OpErr<String> {
+    fn from(value: axum::Error) -> Self {
+        eprintln!("{value:?}");
+
+        OpErr::InternalError("Internal Server Error".to_owned())
+    }
+}
+
 type OperationError<V> = OpErr<V>;
 
 use axum::http::StatusCode;
@@ -51,10 +75,11 @@ impl<V: Serialize> IntoResponse for OpSuc<V> {
 impl<E: Serialize> IntoResponse for OpErr<E> {
     fn into_response(self) -> Response {
         let (status, body) = match self {
-            OpErr::Any(v) => (StatusCode::NOT_FOUND, v),
-            OpErr::InternalError(v) => (StatusCode::NOT_FOUND, v),
-            OpErr::Unauthorized(v) => (StatusCode::NOT_FOUND, v),
+            OpErr::Any(v) => (StatusCode::INTERNAL_SERVER_ERROR, v),
+            OpErr::InternalError(v) => (StatusCode::INTERNAL_SERVER_ERROR, v),
+            OpErr::Unauthorized(v) => (StatusCode::UNAUTHORIZED, v),
             OpErr::NotFound(v) => (StatusCode::NOT_FOUND, v),
+            OpErr::BadRequest(v) => (StatusCode::BAD_REQUEST, v),
         };
 
         (status, Json(body)).into_response()
