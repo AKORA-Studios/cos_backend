@@ -76,7 +76,11 @@ async fn main() {
         .route("/users/:user_id/block", put(block_user_handler))
         .route("/users/:user_id/unblock", put(unblock_user_handler))
         .route("/users/me", get(view_me_handler))
-        .route("/users/me", patch(patch_me_handler));
+        .route("/users/me", patch(patch_me_handler))
+        .route(
+            "/users/me/profilepicture",
+            put(upload_profile_picture_handler),
+        );
 
     let post_router = Router::new()
         .route("/posts/new", post(create_post_handler))

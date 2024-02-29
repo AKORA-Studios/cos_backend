@@ -19,7 +19,7 @@ use tokio_util::io::ReaderStream;
 
 use crate::extractors::auth::Claims;
 
-fn get_path(join: &str) -> PathBuf {
+fn get_path(join: String) -> PathBuf {
     std::env::current_dir()
         .expect("Unable to get CWD")
         .join("contents")
@@ -27,11 +27,11 @@ fn get_path(join: &str) -> PathBuf {
 }
 
 fn profile_picture_path(user_id: i32) -> PathBuf {
-    get_path(format!("users/{user_id}").as_str())
+    get_path(format!("users/{user_id}.jpeg"))
 }
 
 fn post_picture_path(post_id: i32, image_id: u32) -> PathBuf {
-    get_path(format!("posts/{post_id}/{image_id}").as_str())
+    get_path(format!("posts/{post_id}/{image_id}"))
 }
 
 /// GET /posts/<post_id>/contents
@@ -138,7 +138,7 @@ pub async fn get_static_file(uri: Uri) -> Result<Response<BoxBody>, (StatusCode,
 
     // `ServeDir` implements `tower::Service` so we can call it with `tower::ServiceExt::oneshot`
     // When run normally, the root is the workspace root
-    match ServeDir::new(get_path("")).oneshot(req).await {
+    match ServeDir::new(get_path("".to_owned())).oneshot(req).await {
         Ok(res) => Ok(res.map(boxed)),
         Err(err) => Err((
             StatusCode::INTERNAL_SERVER_ERROR,
@@ -147,24 +147,57 @@ pub async fn get_static_file(uri: Uri) -> Result<Response<BoxBody>, (StatusCode,
     }
 }
 
-/// Update user image
-/// PUT /users/me       <image>
-/*
+/// PUT /users/me/profilepicture
 pub async fn upload_profile_picture_handler(
     Claims(claims): Claims,
+    headers: header::HeaderMap,
     mut stream: BodyStream,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let path = profile_picture_path(claims.user_id);
-    let mut file = File::open(path).await?;
+) -> OpResult<String, String> {
+    let user_id = claims.user_id;
+
+    let Some(content_type) = headers.get(header::CONTENT_TYPE) else {
+        return Err(OpErr::BadRequest(
+            "Missing 'content-type' header".to_owned(),
+        ));
+    };
+
+    let Ok(content_type) = content_type.to_str() else {
+        return Err(OpErr::BadRequest(
+            "Invalid 'content-type' header value, header can only contain visible ASCII chars"
+                .to_owned(),
+        ));
+    };
+
+    let Ok(mime_type) = content_type.parse::<mime_guess::Mime>() else {
+        return Err(OpErr::BadRequest(
+            "'content-type' header value is not a valid MIME type".to_owned(),
+        ));
+    };
+
+    if mime_type != mime_guess::mime::IMAGE_JPEG {
+        return Err(OpErr::BadRequest(
+            "Only jpeg's are allowed for profile pictures".to_owned(),
+        ));
+    }
+
+    let picture_path = profile_picture_path(user_id);
+
+    let exists = tokio::fs::try_exists(&picture_path).await?;
+    let mut file = tokio::fs::File::create(&picture_path).await?;
 
     while let Some(chunk) = stream.next().await {
         let chunk = chunk?;
         file.write_all(&chunk).await?;
     }
 
-    Ok(())
+    let resource_path = format!("/contents/users/{user_id}.jpeg");
+
+    if exists {
+        Ok(OpSuc::Updated(resource_path))
+    } else {
+        Ok(OpSuc::Created(resource_path))
+    }
 }
-*/
 
 /// get /users/<user_id>/image
 pub async fn retrieve_profile_picture_handler(user_id: i32) -> Response {
