@@ -224,21 +224,6 @@ pub async fn retrieve_profile_picture_handler(user_id: i32) -> Response {
     (headers, body).into_response()
 }
 
-/// Handle post images
-/// PUT /posts/:post_id>/:image_count        <image>
-/*
-pub async fn upload_post_picture_handler(
-    _user: JWTClaims,
-    _post_id: i32,
-    _image_count: u32,
-    _image: Data<'_>,
-) -> std::io::Result<Status> {
-    // !TODO implement checks for post owner
-
-    return Ok(Status::Forbidden);
-}
-*/
-
 /// get /users/<post_id>/<image_count>
 pub async fn retrieve_post_picture_handler(post_id: i32, image_count: u32) -> Option<File> {
     let filename = post_picture_path(post_id, image_count);
