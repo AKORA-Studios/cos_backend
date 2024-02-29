@@ -107,20 +107,19 @@ pub async fn list_recent_comments_handler(
     Ok(OpSuc::Read(response))
 }
 
-/*
-/// get /posts/today?<limit>
-pub async fn list_today_posts_handler(
+/// GET /posts/today?<limit>
+pub async fn list_todays_posts_handler(
     State(pool): State<PgPool>,
-    Query(limit): Query<Option<i64>>,
-) -> OpResult<FullPostsResponse, String> {
+    Claims(claims): Claims,
+    Limit(limit): Limit,
+) -> OpResult<PostsResponse<FullPost>, String> {
     let limit = limit.unwrap_or(25);
-    let posts = read::list_today_posts(&pool, limit).await;
+    let posts = read::list_today_posts(&pool, limit, Some(claims.user_id)).await?;
 
-    let response = FullPostsResponse { posts };
+    let response = PostsResponse { posts };
 
     Ok(OpSuc::Read(response))
 }
-*/
 
 /// get /posts/recent?<limit>
 pub async fn list_recent_posts_handler(

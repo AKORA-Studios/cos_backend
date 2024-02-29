@@ -99,6 +99,7 @@ async fn main() {
             "/posts/:post_id/comments/recent", //?limit",
             get(list_recent_comments_handler),
         )
+        .route("/posts/today", get(list_todays_posts_handler))
         .route("/posts/recent", get(list_recent_posts_handler));
 
     let event_router = Router::new()

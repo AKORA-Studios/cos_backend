@@ -50,6 +50,16 @@ const SQL_LIST_RECENT_POSTS: &'static str = formatcp!(
     "#
 );
 
+const SQL_LIST_TODAYS_POSTS: &'static str = formatcp!(
+    r#"
+        SELECT {POST_WITH_USER_COLUMNS_AND_COUNTS}
+        FROM posts INNER JOIN users ON posts.user_id = users.id
+        WHERE posts.created_at > (current_timestamp - interval '1d')
+        ORDER BY posts.created_at DESC
+        LIMIT $2;
+    "#
+);
+
 const SQL_LIST_RECENT_POSTS_BY_USER: &'static str = formatcp!(
     r#"
         SELECT {POST_WITH_USER_COLUMNS_AND_COUNTS}
@@ -59,6 +69,30 @@ const SQL_LIST_RECENT_POSTS_BY_USER: &'static str = formatcp!(
         LIMIT $3;
     "#
 );
+
+pub async fn prepare_post_statements(conn: &mut sqlx::PgConnection) -> Result<(), sqlx::Error> {
+    let prepare_view_post = format!("PREPARE view_post(int) AS {SQL_VIEW_POST}");
+
+    let prepare_list_recent_posts =
+        format!("PREPARE list_recent_posts(int) AS {SQL_LIST_RECENT_POSTS}");
+
+    let prepare_list_recent_posts_by_user =
+        format!("PREPARE list_recent_posts_by_user(int, int) AS {SQL_LIST_RECENT_POSTS_BY_USER}");
+
+    let mut trans = conn.begin().await?;
+
+    sqlx::query(&prepare_view_post).execute(&mut *trans).await?;
+    sqlx::query(&prepare_list_recent_posts)
+        .execute(&mut *trans)
+        .await?;
+    sqlx::query(&prepare_list_recent_posts_by_user)
+        .execute(&mut *trans)
+        .await?;
+
+    trans.commit().await?;
+
+    Ok(())
+}
 
 async fn get_post_contents(post_id: i32) -> Result<Vec<String>, OpErr<String>> {
     let post_dir_path = std::env::current_dir()
@@ -84,30 +118,6 @@ async fn get_post_contents(post_id: i32) -> Result<Vec<String>, OpErr<String>> {
     }
 
     Ok(contents)
-}
-
-pub async fn prepare_post_statements(conn: &mut sqlx::PgConnection) -> Result<(), sqlx::Error> {
-    let prepare_view_post = format!("PREPARE view_post(int) AS {SQL_VIEW_POST}");
-
-    let prepare_list_recent_posts =
-        format!("PREPARE list_recent_posts(int) AS {SQL_LIST_RECENT_POSTS}");
-
-    let prepare_list_recent_posts_by_user =
-        format!("PREPARE list_recent_posts_by_user(int, int) AS {SQL_LIST_RECENT_POSTS_BY_USER}");
-
-    let mut trans = conn.begin().await?;
-
-    sqlx::query(&prepare_view_post).execute(&mut *trans).await?;
-    sqlx::query(&prepare_list_recent_posts)
-        .execute(&mut *trans)
-        .await?;
-    sqlx::query(&prepare_list_recent_posts_by_user)
-        .execute(&mut *trans)
-        .await?;
-
-    trans.commit().await?;
-
-    Ok(())
 }
 
 pub async fn view_post(
@@ -148,6 +158,26 @@ pub async fn list_recent_posts(
         .collect())
 }
 
+pub async fn list_today_posts(
+    pool: &PgPool,
+    limit: i32,
+    viewer_id: Option<i32>,
+) -> TaskResult<Vec<FullPost>, String> {
+    let posts = sqlx::query_as::<_, RawFullPost>(SQL_LIST_TODAYS_POSTS)
+        .bind(viewer_id.unwrap_or(0)) // TODO: Probably not the smartest assumption
+        .bind(limit)
+        .fetch_all(pool)
+        .await?;
+
+    let posts_contents = try_join_all(posts.iter().map(|p| get_post_contents(p.id))).await?;
+
+    Ok(posts
+        .into_iter()
+        .zip(posts_contents.into_iter())
+        .map(|(p, c)| p.convert(c))
+        .collect())
+}
+
 pub async fn list_user_posts(
     pool: &PgPool,
     user_id: i32,
@@ -169,35 +199,3 @@ pub async fn list_user_posts(
         .map(|(p, c)| p.convert(c))
         .collect())
 }
-
-/*
-pub async fn list_today_posts(
-    pool: &PgPool,
-    limit: usize,
-) -> TaskResult<Vec<JoinedPostWithUser>, String> {
-    use domain::schema::posts::dsl::*;
-
-    let result = posts
-        .select(all_columns)
-        .filter(created_at.gt(SystemTime::now() - Duration::from_secs(60 * 60 * 24)))
-        .limit(limit as i64)
-        .inner_join(users::table.on(users::id.eq(user_id)))
-        .select(POST_WITH_USER_COLUMNS)
-        .load::<JoinedPostWithUser>(db_conn);
-
-    let sql = format!(
-        r#"SELECT {POST_WITH_USER_COLUMNS}
-                FROM posts INNER JOIN users ON posts.user_id = users.id
-                ORDER BY posts.created_at DESC
-                LIMIT $1
-                "#
-    );
-
-    let result = sqlx::query_as::<_, JoinedPostWithUser>(&sql)
-        .bind(limit)
-        .fetch_all(pool)
-        .await;
-
-    map_sqlx_result(result)
-}
- */
