@@ -5,7 +5,7 @@ pub fn map_sqlx_result<T>(result: Result<T, sqlx::Error>) -> Result<T, OpErr<Str
         sqlx::Error::RowNotFound => OpErr::NotFound("".to_owned()),
         _ => {
             eprintln!("{e:?}");
-            OpErr::InternalError("Internal Server error :/".to_owned())
+            OpErr::internal_error()
         }
     })
 }

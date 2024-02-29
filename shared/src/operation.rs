@@ -30,6 +30,12 @@ pub enum OpErr<E: Serialize> {
     Any(E),
 }
 
+impl OpErr<String> {
+    pub fn internal_error() -> Self {
+        Self::InternalError("Internal Server error".to_owned())
+    }
+}
+
 impl From<std::io::Error> for OpErr<String> {
     fn from(value: std::io::Error) -> Self {
         use std::io::ErrorKind;
@@ -48,7 +54,7 @@ impl From<axum::Error> for OpErr<String> {
     fn from(value: axum::Error) -> Self {
         eprintln!("{value:?}");
 
-        OpErr::InternalError("Internal Server Error".to_owned())
+        OpErr::internal_error()
     }
 }
 
