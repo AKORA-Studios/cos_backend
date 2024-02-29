@@ -17,6 +17,3 @@ serde = { version = "1.0.147" }
 serde_json = "1.0.88"
 
 chrono = { version = "0.4.31", default-features = false, features = [] }
-
-[profile.dev.package.sqlx-macros]
-opt-level = 3

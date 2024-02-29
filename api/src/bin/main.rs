@@ -62,6 +62,7 @@ async fn main() {
     }
 
     use api::event_handler::*;
+    use api::image_handler::*;
     use api::message_handler::*;
     use api::post_handler::*;
     use api::user_handler::*;
@@ -81,6 +82,10 @@ async fn main() {
         .route("/posts/new", post(create_post_handler))
         .route("/posts/:post_id", get(view_post_handler))
         .route("/posts/:post_id", delete(delete_post_handler))
+        .route(
+            "/posts/:post_id/upload/:image_id",
+            post(upload_post_picture_handler),
+        )
         .route("/posts/:post_id/like", put(like_post_handler))
         .route("/posts/:post_id/unlike", put(unlike_post_handler))
         .route("/posts/:post_id/download", put(download_post_handler))
