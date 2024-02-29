@@ -34,7 +34,36 @@ fn post_picture_path(post_id: i32, image_id: u32) -> PathBuf {
     get_path(format!("posts/{post_id}/{image_id}").as_str())
 }
 
-/// post /posts/<post_id>/upload/<image_id>
+/// GET /posts/<post_id>/contents
+pub async fn list_post_contents(
+    State(pool): State<sqlx::PgPool>,
+    Path(post_id): Path<i32>,
+) -> OpResult<Vec<String>, String> {
+    // Check if post still exists
+    let _post = post::read::view_post(&pool, post_id, None).await?;
+
+    let picture_path = post_picture_path(post_id, 0);
+    let post_dir_path = picture_path.parent().unwrap();
+
+    let exists = tokio::fs::try_exists(post_dir_path).await?;
+    if !exists {
+        return Err(OpErr::NotFound("Post has no contents".to_owned()));
+    }
+
+    let mut dir = tokio::fs::read_dir(post_dir_path).await?;
+    let mut contents = Vec::new();
+    while let Some(entry) = dir.next_entry().await? {
+        let Ok(file_name) = entry.file_name().into_string() else {
+            eprintln!("String error while parsing {:?}", entry.file_name());
+            return Err(OpErr::internal_error());
+        };
+        contents.push(format!("/contents/posts/{post_id}/{file_name}"));
+    }
+
+    Ok(OpSuc::Success(contents))
+}
+
+/// POST /posts/<post_id>/upload/<image_id>
 pub async fn upload_post_picture_handler(
     State(pool): State<sqlx::PgPool>,
     Claims(claims): Claims,

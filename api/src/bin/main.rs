@@ -86,6 +86,7 @@ async fn main() {
             "/posts/:post_id/upload/:image_id",
             post(upload_post_picture_handler),
         )
+        .route("/posts/:post_id/contents", get(list_post_contents))
         .route("/posts/:post_id/like", put(like_post_handler))
         .route("/posts/:post_id/unlike", put(unlike_post_handler))
         .route("/posts/:post_id/download", put(download_post_handler))
