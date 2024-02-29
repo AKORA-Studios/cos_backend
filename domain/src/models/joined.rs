@@ -25,7 +25,7 @@ pub struct RawFullPost {
 }
 
 impl RawFullPost {
-    pub fn convert(&self) -> FullPost {
+    pub fn convert(&self, contents: Vec<String>) -> FullPost {
         FullPost {
             id: self.id,
             author: PostUserInfo {
@@ -48,6 +48,7 @@ impl RawFullPost {
                 people: self.people_count,
                 comments: self.comment_count,
             },
+            contents,
         }
     }
 }
@@ -66,6 +67,7 @@ pub struct FullPost {
 
     pub is_liked: bool,
     pub stats: PostStats,
+    pub contents: Vec<String>,
     //pub depicted_people: Vec<i32>,
 }
 

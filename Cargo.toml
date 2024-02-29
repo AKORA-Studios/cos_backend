@@ -10,6 +10,10 @@ sqlx = { version = "0.7.2", default-features = false, features = [
 
 axum = { version = "0.6.2", features = [] }
 tokio = { version = "1.33.0", features = ["full"] }
+futures-util = { version = "0.3.30", default-features = false, features = [
+    "std",
+    "async-await",
+] }
 tower = "0.4.13"
 tower-http = { version = "0.4.*", default-features = false }
 

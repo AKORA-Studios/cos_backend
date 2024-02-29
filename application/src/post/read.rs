@@ -1,9 +1,11 @@
 // application/src/post/read.rs
 
 use domain::models::{FullPost, RawFullPost};
+use futures::{future::try_join_all, try_join, TryFutureExt};
+use shared::operation::OpErr;
 use sqlx::{Acquire, PgPool};
 
-use crate::{map_sqlx_result, TaskResult};
+use crate::TaskResult;
 
 const POST_WITH_USER_COLUMNS_AND_COUNTS: &'static str = r#"
     posts.id,
@@ -58,6 +60,32 @@ const SQL_LIST_RECENT_POSTS_BY_USER: &'static str = formatcp!(
     "#
 );
 
+async fn get_post_contents(post_id: i32) -> Result<Vec<String>, OpErr<String>> {
+    let post_dir_path = std::env::current_dir()
+        .expect("Unable to get CWD")
+        .join("contents")
+        .join("posts")
+        .join(post_id.to_string());
+
+    let exists = tokio::fs::try_exists(&post_dir_path).await?;
+    if !exists {
+        //return Err(OpErr::NotFound("Post has no contents".to_owned()));
+        return Ok(Vec::new());
+    }
+
+    let mut dir = tokio::fs::read_dir(&post_dir_path).await?;
+    let mut contents = Vec::new();
+    while let Some(entry) = dir.next_entry().await? {
+        let Ok(file_name) = entry.file_name().into_string() else {
+            eprintln!("String error while parsing {:?}", entry.file_name());
+            return Err(OpErr::internal_error());
+        };
+        contents.push(format!("/contents/posts/{post_id}/{file_name}"));
+    }
+
+    Ok(contents)
+}
+
 pub async fn prepare_post_statements(conn: &mut sqlx::PgConnection) -> Result<(), sqlx::Error> {
     let prepare_view_post = format!("PREPARE view_post(int) AS {SQL_VIEW_POST}");
 
@@ -87,13 +115,17 @@ pub async fn view_post(
     post_id: i32,
     viewer_id: Option<i32>,
 ) -> TaskResult<FullPost, String> {
-    let result = sqlx::query_as::<_, RawFullPost>(SQL_VIEW_POST)
+    let sql_future = sqlx::query_as::<_, RawFullPost>(SQL_VIEW_POST)
         .bind(viewer_id.unwrap_or(0)) // TODO: Probably not the smartest assumption
         .bind(post_id)
         .fetch_one(pool)
-        .await;
+        .map_err(|e| e.into());
 
-    map_sqlx_result(result.map(|p| p.convert()))
+    let fs_future = get_post_contents(post_id);
+
+    let (post, contents) = try_join!(sql_future, fs_future)?;
+
+    Ok(post.convert(contents))
 }
 
 pub async fn list_recent_posts(
@@ -101,13 +133,41 @@ pub async fn list_recent_posts(
     limit: i32,
     viewer_id: Option<i32>,
 ) -> TaskResult<Vec<FullPost>, String> {
-    let result = sqlx::query_as::<_, RawFullPost>(SQL_LIST_RECENT_POSTS)
+    let posts = sqlx::query_as::<_, RawFullPost>(SQL_LIST_RECENT_POSTS)
         .bind(viewer_id.unwrap_or(0)) // TODO: Probably not the smartest assumption
         .bind(limit)
         .fetch_all(pool)
-        .await;
+        .await?;
 
-    map_sqlx_result(result.map(|p| p.into_iter().map(|p| p.convert()).collect()))
+    let posts_contents = try_join_all(posts.iter().map(|p| get_post_contents(p.id))).await?;
+
+    Ok(posts
+        .into_iter()
+        .zip(posts_contents.into_iter())
+        .map(|(p, c)| p.convert(c))
+        .collect())
+}
+
+pub async fn list_user_posts(
+    pool: &PgPool,
+    user_id: i32,
+    limit: i32,
+    viewer_id: Option<i32>,
+) -> TaskResult<Vec<FullPost>, String> {
+    let posts = sqlx::query_as::<_, RawFullPost>(SQL_LIST_RECENT_POSTS_BY_USER)
+        .bind(viewer_id)
+        .bind(user_id)
+        .bind(limit)
+        .fetch_all(pool)
+        .await?;
+
+    let posts_contents = try_join_all(posts.iter().map(|p| get_post_contents(p.id))).await?;
+
+    Ok(posts
+        .into_iter()
+        .zip(posts_contents.into_iter())
+        .map(|(p, c)| p.convert(c))
+        .collect())
 }
 
 /*
@@ -141,19 +201,3 @@ pub async fn list_today_posts(
     map_sqlx_result(result)
 }
  */
-
-pub async fn list_user_posts(
-    pool: &PgPool,
-    user_id: i32,
-    limit: i32,
-    viewer_id: Option<i32>,
-) -> TaskResult<Vec<FullPost>, String> {
-    let result = sqlx::query_as::<_, RawFullPost>(SQL_LIST_RECENT_POSTS_BY_USER)
-        .bind(viewer_id)
-        .bind(user_id)
-        .bind(limit)
-        .fetch_all(pool)
-        .await;
-
-    map_sqlx_result(result.map(|p| p.into_iter().map(|p| p.convert()).collect()))
-}

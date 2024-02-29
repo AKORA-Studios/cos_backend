@@ -58,6 +58,18 @@ impl From<axum::Error> for OpErr<String> {
     }
 }
 
+impl From<sqlx::Error> for OpErr<String> {
+    fn from(value: sqlx::Error) -> Self {
+        match value {
+            sqlx::Error::RowNotFound => OpErr::NotFound("".to_owned()),
+            _ => {
+                eprintln!("{value:?}");
+                OpErr::internal_error()
+            }
+        }
+    }
+}
+
 type OperationError<V> = OpErr<V>;
 
 use axum::http::StatusCode;

@@ -13,6 +13,8 @@ shared = { path = "../shared" }
 sqlx = { workspace = true, features = ["postgres"] }
 # serde = { workspace = true }
 # serde_json = { workspace = true }
+tokio = { workspace = true }
+futures-util = { workspace = true }
 
 argon2 = "0.4.1"
 jsonwebtoken = { version = "8", default-features = false }
