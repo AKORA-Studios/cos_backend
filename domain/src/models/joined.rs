@@ -37,22 +37,8 @@ pub struct RawFullPost {
     pub download_count: i64,
     pub like_count: i64,
     pub people_count: i64,
+    pub comment_count: i64,
 }
-
-pub const POST_WITH_USER_COLUMNS: &'static str = r#"
-    posts.id,
-    posts.caption,
-    posts.description,
-    posts.user_id,
-    posts.tags,
-    posts.photographer_id,
-    posts.lat,
-    posts.lon,
-    posts.created_at,
-    
-    users.username as author_username,
-    users.nickname as author_nickname
-"#;
 
 impl RawFullPost {
     pub fn convert(&self) -> FullPost {
@@ -76,6 +62,7 @@ impl RawFullPost {
                 downloads: self.download_count,
                 likes: self.like_count,
                 people: self.people_count,
+                comments: self.comment_count,
             },
         }
     }
@@ -110,4 +97,5 @@ pub struct PostStats {
     pub downloads: i64,
     pub likes: i64,
     pub people: i64,
+    pub comments: i64,
 }

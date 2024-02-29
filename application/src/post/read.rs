@@ -24,7 +24,9 @@ const POST_WITH_USER_COLUMNS_AND_COUNTS: &'static str = r#"
     (SELECT COUNT(*) FROM post_likes WHERE post_id = posts.id)
         AS like_count,
     (SELECT COUNT(*) FROM post_depicted_people WHERE post_id = posts.id)
-        AS people_count
+        AS people_count,
+    (SELECT COUNT(*) FROM comments WHERE post_id = posts.id)
+        AS comment_count
 "#;
 
 use const_format::formatcp;
